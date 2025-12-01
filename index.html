@@ -848,7 +848,64 @@
                     { russian: 'переставать', english: 'stop, cease, to stop' },
                     { russian: 'пытаться', english: 'try, attempt, to try' },
                     { russian: 'выполнять', english: 'fulfill, carry out, to perform' }
-                ];
+                ,
+                    { russian: 'находится', english: 'is, is situated, has been, located, is located' },
+                    { russian: 'украина', english: 'Ukraine' },
+                    { russian: 'около', english: 'near, around, for about, about, beside' },
+                    { russian: 'улице', english: 'the street, outside, street' },
+                    { russian: 'этой', english: 'this one, this, that, these, of this, the' },
+                    { russian: 'страна', english: 'country, a country' },
+                    { russian: 'об', english: 'about, of' },
+                    { russian: 'улица', english: 'the street, street, the street is' },
+                    { russian: 'хожу', english: 'walk, go, am walking' },
+                    { russian: 'ходить', english: 'go, to walk, walking, going, walk, to go' },
+                    { russian: 'отдыхать', english: 'relax, to rest, rest, relaxing, to relax' },
+                    { russian: 'нравится', english: 'like, enjoys, admire, likes, appreciates, love' },
+                    { russian: 'людей', english: 'people, of people, the people, people\'s' },
+                    { russian: 'люди', english: 'people, the people, men, humans, do people' },
+                    { russian: 'петербург', english: 'Petersburg, St. Petersburg' },
+                    { russian: 'тут', english: 'here' },
+                    { russian: 'говорю', english: 'speak, tell, telling, talk, saying, say, talking' },
+                    { russian: 'по-русски', english: 'in Russian, Russian' },
+                    { russian: 'говорит', english: 'has been talking, speaks, speak, tell, tells' },
+                    { russian: 'река', english: 'river, the river, a river' },
+                    { russian: 'большой', english: 'large, a large, a big, big, the big, great, the large' },
+                    { russian: 'гостиница', english: 'hotel, the hotel' },
+                    { russian: 'больше', english: 'bigger, is bigger, is greater than, greater than' },
+                    { russian: 'заказывать', english: 'order, ordering' },
+                    { russian: 'концерт', english: 'concert, the concert, does the concert' },
+                    { russian: 'спектакль', english: 'show, performance, play' },
+                    { russian: 'турист', english: 'tourist, a tourist' },
+                    { russian: 'классический', english: 'classical' },
+                    { russian: 'впереди', english: 'ahead, up ahead, ahead of, in the front' },
+                    { russian: 'экскурсия', english: 'the tour, tour, (guided) tour, touring' },
+                    { russian: 'выставка', english: 'show, exhibition, fair' },
+                    { russian: 'галерея', english: 'the gallery, gallery, a gallery' },
+                    { russian: 'совсем', english: 'entirely, at all, definitely, completely, really, lot' },
+                    { russian: 'по-немецки', english: 'German, in German' },
+                    { russian: 'по-английски', english: 'English, in English' },
+                    { russian: 'без', english: 'without, have no, no' },
+                    { russian: 'европе', english: 'Europe' },
+                    { russian: 'ехать', english: 'to go, go, to take, travel, drive, going' },
+                    { russian: 'европа', english: 'Europe' },
+                    { russian: 'цирк', english: 'circus, the circus' },
+                    { russian: 'главный', english: 'main, is the main, chief, the main, ultimate' },
+                    { russian: 'животное', english: 'animal, an animal, the animal' },
+                    { russian: 'зал', english: 'hall' },
+                    { russian: 'домашний', english: 'a pet, pet, homemade' },
+                    { russian: 'зоопарк', english: 'zoo, the zoo, a zoo' },
+                    { russian: 'лес', english: 'woods, the forest, forest, wood, the woods' },
+                    { russian: 'киоск', english: 'kiosk, the kiosk, stand, booth, a kiosk' },
+                    { russian: 'пол', english: 'floor, half, the floor' },
+                    { russian: 'мост', english: 'bridge, there is a bridge, the bridge' },
+                    { russian: 'обсуждать', english: 'discuss, to discuss' },
+                    { russian: 'опаздывать', english: 'late, to be late, be late' },
+                    { russian: 'возможность', english: 'opportunity, possibility' },
+                    { russian: 'просить', english: 'ask' },
+                    { russian: 'туда', english: 'there, there (direction where to)' },
+                    { russian: 'отдыхает', english: 'is having a rest, is resting, rests, rest, resting' },
+                    { russian: 'иногда', english: 'sometimes, occasionally, Sometimes' },
+                    { russian: 'ходит', english: 'walk, walks, is walking, go, goes, comes, attend' }];
             }
 
             loadVocabulary() {
@@ -1042,9 +1099,11 @@
                     cards.push({ id: `p${index}-en`, text: vocab.english, lang: 'en', pairId: index, realIndex: realIndex });
                 });
 
-                // Simple shuffle - we replace all 5 pairs at once, so no need for anti-adjacent
                 const ruCards = cards.filter(c => c.lang === 'ru').sort(() => Math.random() - 0.5);
                 const enCards = cards.filter(c => c.lang === 'en').sort(() => Math.random() - 0.5);
+
+                const prevGame = isWeakMode ? this.weakGame : this.currentGame;
+                const prevCompleted = prevGame && prevGame.completed ? prevGame.completed : 0;
 
                 const gameObj = {
                     pairs: selectedPairs, 
@@ -1054,15 +1113,13 @@
                     matched: [],
                     pairsCount: selectedPairs.length,
                     totalPairs: selectedPairs.length + (this.pairQueue ? this.pairQueue.length : 0),
-                    completed: game && !isWeakMode ? game.completed || 0 : 0
+                    completed: prevCompleted
                 };
 
                 if (isWeakMode) {
                     this.weakGame = gameObj;
                     this.weakSelectedCards = [];
                 } else {
-                    const game = this.currentGame;
-                    gameObj.completed = game && game.completed ? game.completed : 0;
                     this.currentGame = gameObj;
                     this.selectedCards = [];
                 }
@@ -1130,31 +1187,25 @@
                     document.getElementById(gridId).style.pointerEvents = 'none';
 
                     if (c1.pairId === c2.pairId) {
-                        // CORRECT MATCH
                         setTimeout(() => {
                             game.matched.push(c1.id, c2.id);
                             this.updateWordStats(c1.realIndex, true);
                             game.completed++;
 
-                            // Check if ALL 5 pairs of current round are matched
                             const totalCurrentPairs = game.pairs.length;
                             const matchedPairs = game.matched.length / 2;
 
                             if (matchedPairs >= totalCurrentPairs) {
-                                // ALL PAIRS MATCHED! Load next batch
                                 if (this.pairQueue && this.pairQueue.length > 0) {
-                                    // Get next 5 pairs (or remaining pairs)
                                     const nextBatchSize = Math.min(5, this.pairQueue.length);
                                     const nextBatch = this.pairQueue.splice(0, nextBatchSize);
 
-                                    // Reset game with new batch
                                     setTimeout(() => {
                                         this.setupGameGrid(nextBatch, 'gameGrid', false);
                                         document.getElementById(gridId).style.pointerEvents = 'auto';
                                     }, 500);
                                     return;
                                 } else {
-                                    // GAME COMPLETED!
                                     this.stopTimer();
                                     this.stats.totalMatches += game.completed;
                                     this.saveStats();
@@ -1167,14 +1218,12 @@
 
                             this.finishTurn(isWeakMode);
 
-                            // Update UI counters
                             const cEl = document.getElementById(isWeakMode ? 'weakMatchedCount' : 'matchedCount');
                             const tEl = document.getElementById(isWeakMode ? 'weakTotalPairs' : 'totalPairs');
                             if(cEl) cEl.textContent = game.completed;
                             if(tEl) tEl.textContent = game.totalPairs;
                         }, 150);
                     } else {
-                        // WRONG MATCH
                         setTimeout(() => {
                             document.querySelectorAll(`#${gridId} .selected`).forEach(el => el.classList.add('error'));
                             this.stats.totalErrors++;
