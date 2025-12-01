@@ -321,7 +321,58 @@
                 font-size: 13px;
             }
         }
-    </style>
+    
+        .timer {
+            font-size: 24px; font-weight: bold; color: var(--color-primary);
+            margin-top: var(--space-12); font-variant-numeric: tabular-nums;
+        }
+        .game-grid { grid-template-columns: repeat(5, 1fr) !important; }
+        @media (max-width: 600px) {
+             .card { padding: 4px !important; min-height: 60px !important; font-size: 12px !important; }
+        }
+        /* Stats Bars */
+        .stat-bar-container {
+            display: flex; align-items: center; gap: 8px; margin-top: 4px;
+            font-size: 12px; color: var(--color-text-secondary);
+        }
+        .stat-bar-bg {
+            flex: 1; height: 8px; background: #eee; border-radius: 4px; overflow: hidden;
+            max-width: 100px;
+        }
+        .stat-bar-fill { height: 100%; background: var(--color-error); }
+
+        /* Flashcard Mode */
+        .flashcard-container {
+            perspective: 1000px; width: 100%; max-width: 400px; height: 250px; margin: 20px auto;
+            cursor: pointer;
+        }
+        .flashcard {
+            position: relative; width: 100%; height: 100%; text-align: center;
+            transition: transform 0.6s; transform-style: preserve-3d;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-radius: var(--radius-lg);
+        }
+        .flashcard.flipped { transform: rotateY(180deg); }
+        .flashcard-face {
+            position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: var(--color-surface); border: 2px solid var(--color-border); border-radius: var(--radius-lg);
+            padding: 20px;
+        }
+        .flashcard-back { transform: rotateY(180deg); background: #fdfdfd; }
+        .flashcard-text { font-size: 28px; font-weight: bold; color: var(--color-text); margin-bottom: 10px; }
+        .flashcard-sub { font-size: 14px; color: var(--color-text-secondary); }
+        .flashcard-controls {
+            display: flex; gap: 10px; justify-content: center; margin-top: 20px;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .flashcard-controls.visible { opacity: 1; pointer-events: auto; }
+        .btn-rate { flex: 1; padding: 12px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; }
+        .btn-wrong { background: var(--color-error); }
+        .btn-correct { background: var(--color-success); }
+        .direction-toggle {
+            display: flex; justify-content: center; gap: 10px; margin-bottom: 20px;
+        }
+</style>
     <!-- iOS App-Optimierung -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -333,7 +384,9 @@
         <div class="header">
             <h1>🇷🇺 Russisch Vokabel Trainer</h1>
             <p class="subtitle">Lerne spielerisch neue Wörter</p>
-        </div>
+        
+        <div id="timer" class="timer">00:00<button class="tab-btn" data-tab="flashcards">Abfragen (Quiz)</button>
+        </div></div>
 
         <div class="tabs">
             <button class="tab-btn active" data-tab="game">Spiel</button>
@@ -397,6 +450,31 @@
             <div class="stats">
                 <div class="stat-item">
                     <div class="stat-value" id="totalVocab">0</div>
+        <div id="flashcards" class="tab-content" style="display: none;">
+            <div class="direction-toggle">
+                <label><input type="radio" name="direction" value="de-ru" checked onchange="app.setDirection('de-ru')"> DE → RU</label>
+                <label><input type="radio" name="direction" value="ru-de" onchange="app.setDirection('ru-de')"> RU → DE</label>
+            </div>
+            <div class="flashcard-container" onclick="app.flipCard()">
+                <div class="flashcard" id="flashcard">
+                    <div class="flashcard-face flashcard-front">
+                        <div class="flashcard-text" id="fc-front">Start</div>
+                        <div class="flashcard-sub">Tippen zum Umdrehen</div>
+                    </div>
+                    <div class="flashcard-face flashcard-back">
+                        <div class="flashcard-text" id="fc-back">...</div>
+                    </div>
+                </div>
+            </div>
+            <div class="flashcard-controls" id="fc-controls">
+                <button class="btn-rate btn-wrong" onclick="app.rateCard(false)">Falsch</button>
+                <button class="btn-rate btn-correct" onclick="app.rateCard(true)">Richtig</button>
+            </div>
+            <div style="text-align:center; margin-top:20px;">
+                <button class="btn" onclick="app.startFlashcards()">Neue Runde starten</button>
+            </div>
+        </div>
+    
                     <div class="stat-label">Vokabeln</div>
                 </div>
                 <div class="stat-item">
@@ -426,7 +504,8 @@
     <script>
         class VocabularyApp {
             constructor() {
-                this.vocabulary = this.loadVocabulary();
+                this.vocabulary = this.gameDeck = [];
+        this.loadVocabulary();
                 this.currentGame = null;
                 this.selectedCards = [];
                 this.weakSelectedCards = [];
@@ -950,29 +1029,23 @@
                 if (this.vocabulary.length < 2) return;
 
                 // Mobile: 4 pairs, Desktop: 8 pairs (no scrolling needed!)
-                const isMobile = window.innerWidth <= 600;
-                const maxPairs = isMobile ? 4 : 8;
+                
+                this.startTimer();
+                if (this.vocabulary.length < 2) return;
+                const maxPairs = 5;
                 const pairsNeeded = Math.min(maxPairs, this.vocabulary.length);
-                const weakWords = this.vocabulary.filter(v => v.mistakes > v.correct);
-                const otherWords = this.vocabulary.filter(v => v.mistakes <= v.correct);
-                
-                let selected = [];
-                // Take weak words first
-                selected = weakWords.sort(() => Math.random() - 0.5).slice(0, Math.min(pairsNeeded, weakWords.length));
-                
-                // Fill up with others
-                if (selected.length < pairsNeeded) {
-                    const needed = pairsNeeded - selected.length;
-                    const othersShuffled = otherWords.sort(() => Math.random() - 0.5).slice(0, needed);
-                    selected = selected.concat(othersShuffled);
-                }
 
-                // If somehow still not enough (edge case), just shuffle all
-                if (selected.length < pairsNeeded) {
-                    selected = this.vocabulary.sort(() => Math.random() - 0.5).slice(0, pairsNeeded);
+                if (this.gameDeck.length < pairsNeeded) {
+                    const allWordIndices = this.vocabulary.map((_, i) => i);
+                    for (let i = allWordIndices.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [allWordIndices[i], allWordIndices[j]] = [allWordIndices[j], allWordIndices[i]];
+                    }
+                    this.gameDeck = allWordIndices;
                 }
-
-                this.setupGameGrid(selected, 'gameGrid', false);
+                const indicesForThisRound = this.gameDeck.splice(0, pairsNeeded);
+                const selected = indicesForThisRound.map(index => this.vocabulary[index]);
+    this.setupGameGrid(selected, 'gameGrid', false);
                 this.stats.gamesPlayed++;
                 this.saveStats();
             }
@@ -1084,11 +1157,12 @@
                             this.finishTurn(isWeakMode);
                             
                             if (game.matched.length === game.allCards.length) {
+                                this.stopTimer();
                                 this.stats.totalMatches += game.pairsCount;
                                 this.saveStats();
                                 setTimeout(() => alert("🎉 Super! Runde beendet!"), 100);
                             }
-                        }, 400);
+                        }, 150);
                     } else {
                         setTimeout(() => {
                             document.querySelectorAll(`#${gridId} .selected`).forEach(el => el.classList.add('error'));
@@ -1099,8 +1173,8 @@
                             
                             setTimeout(() => {
                                 this.finishTurn(isWeakMode);
-                            }, 800);
-                        }, 400);
+                            }, 400);
+                        }, 150);
                     }
                 }
             }
@@ -1190,7 +1264,73 @@
                 a.download = 'russisch-trainer-backup.json';
                 a.click();
             }
-        }
+        
+            startTimer() {
+                this.stopTimer(); this.startTime = Date.now();
+                const timerEl = document.getElementById('timer');
+                if(timerEl) timerEl.textContent = '00:00';
+                this.timerInterval = setInterval(() => {
+                    const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+                    const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                    const secs = (elapsed % 60).toString().padStart(2, '0');
+                    if(timerEl) timerEl.textContent = `${mins}:${secs}`;
+                }, 100);
+            }
+            
+            setDirection(dir) {
+                this.flashcardDirection = dir;
+                this.startFlashcards();
+            }
+
+            startFlashcards() {
+                // Shuffle full deck or use weak words? Let's use gameDeck logic but simplified
+                if (!this.flashcardDeck || this.flashcardDeck.length === 0) {
+                     this.flashcardDeck = [...this.vocabulary].sort(() => Math.random() - 0.5);
+                }
+                this.nextFlashcard();
+            }
+
+            nextFlashcard() {
+                if (this.flashcardDeck.length === 0) {
+                    alert('Alle Karten gelernt! Wir mischen neu.');
+                    this.flashcardDeck = [...this.vocabulary].sort(() => Math.random() - 0.5);
+                }
+                this.currentFlashcard = this.flashcardDeck.pop();
+
+                const isDeRu = this.flashcardDirection === 'de-ru' || !this.flashcardDirection;
+                const front = isDeRu ? this.currentFlashcard.translation : this.currentFlashcard.word;
+                const back = isDeRu ? this.currentFlashcard.word : this.currentFlashcard.translation;
+
+                document.getElementById('fc-front').textContent = front;
+                document.getElementById('fc-back').textContent = back;
+
+                const card = document.getElementById('flashcard');
+                card.classList.remove('flipped');
+                document.getElementById('fc-controls').classList.remove('visible');
+                this.cardFlipped = false;
+            }
+
+            flipCard() {
+                if (this.cardFlipped) return;
+                document.getElementById('flashcard').classList.add('flipped');
+                document.getElementById('fc-controls').classList.add('visible');
+                this.cardFlipped = true;
+
+                // Speak if Russian is revealed
+                const isDeRu = this.flashcardDirection === 'de-ru' || !this.flashcardDirection;
+                if (isDeRu) {
+                     this.speak(this.currentFlashcard.word, 'ru');
+                }
+            }
+
+            rateCard(correct) {
+                if (!this.currentFlashcard) return;
+                this.updateWordStats(this.vocabulary.indexOf(this.currentFlashcard), correct);
+                this.nextFlashcard();
+            }
+
+stopTimer() { if (this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; } }
+}
 
         const app = new VocabularyApp();
 
