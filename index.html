@@ -92,11 +92,17 @@
 
         .game-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-20);
             margin-bottom: var(--space-20);
         }
         
+        .game-grid-column {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-12);
+        }
+
         .word-card {
             padding: 14px;
             background-color: var(--color-surface);
@@ -163,7 +169,8 @@
             line-height: 1.4;
             word-break: break-word;
         }
-        
+        .speaker-icon { font-size: 16px; opacity: 0.7; margin-top: 4px; }
+        .word-card.selected .speaker-icon, .word-card.matched .speaker-icon { color: white; opacity: 1; }
         .english { 
             font-size: 15px; 
             opacity: 0.85;
@@ -171,11 +178,6 @@
             color: #2c2c2c;
             line-height: 1.3;
             word-break: break-word;
-        }
-        
-        .word-card.selected .russian, .word-card.selected .english,
-        .word-card.matched .russian, .word-card.matched .english {
-            color: white;
         }
 
         .button-group { display: flex; gap: var(--space-12); justify-content: center; flex-wrap: wrap; }
@@ -255,26 +257,99 @@
         .stat-value { font-size: 32px; font-weight: 600; color: var(--color-primary); }
         .stat-label { font-size: 14px; color: var(--color-text-secondary); margin-top: 5px; }
 
-        .timer { font-size: 24px; font-weight: bold; color: var(--color-primary); margin-top: 12px; font-variant-numeric: tabular-nums; text-align: center; }
-        
-        /* Mobile Optimierung */
+        .message { padding: 10px 16px; border-radius: var(--radius-base); margin-top: 10px; font-size: 14px; text-align: center; }
+        .message.success { background-color: rgba(32, 140, 141, 0.1); color: var(--color-success); border: 1px solid var(--color-success); }
+        .message.error { background-color: rgba(192, 21, 47, 0.1); color: var(--color-error); border: 1px solid var(--color-error); }
+
         @media (max-width: 600px) {
-            body { padding: 12px; }
-            h1 { font-size: 24px; }
-            
-            .game-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-            .word-card { padding: 6px; min-height: 65px; }
-            .russian { font-size: 14px; }
-            .english { font-size: 12px; }
+            body {
+                padding: 12px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            /* Grid bleibt 2-spaltig */
+            .game-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            .game-grid-column {
+                gap: 10px;
+            }
+
+            /* Kompaktere Karten für Mobile */
+            .word-card {
+                min-height: 85px;
+                padding: 12px 8px;
+            }
+
+            /* Angepasste Schriftgrößen */
+            .russian {
+                font-size: 16px;
+            }
+
+            .english {
+                font-size: 14px;
+            }
 
             .game-info {
                 flex-direction: column;
                 gap: 12px;
+                align-items: stretch;
                 text-align: center;
                 padding: 12px;
             }
+
+            .button-group {
+                gap: 8px;
+            }
+
+            .btn {
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+
+            .tabs {
+                gap: 8px;
+            }
+
+            .tab-btn {
+                padding: 10px 16px;
+                font-size: 13px;
+            }
         }
+    
+        .timer { font-size: 24px; font-weight: bold; color: var(--color-primary); margin-top: 12px; font-variant-numeric: tabular-nums; }
+        .game-grid { display: grid; grid-template-columns: repeat(5, 1fr) !important; gap: 10px; }
+        .stat-item { padding: 12px; border-bottom: 1px solid #E0E0E0; }
+        .stat-bar-container { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-top: 4px; }
+        .stat-bar-bg { flex: 1; height: 8px; background: #eee; border-radius: 4px; max-width: 100px; }
+        .stat-bar-fill { height: 100%; }
+        @media (max-width: 600px) {
+            .game-grid { gap: 8px; }
+            .word-card { padding: 6px !important; min-height: 65px !important; font-size: 10px !important; }
+            .russian { font-size: 12px !important; }
+            .english { font-size: 11px !important; }
+        }
+
+        .timer { font-size: 24px; font-weight: bold; color: var(--color-primary); margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+        /* 5 Columns Grid */
+        .game-grid { display: grid; grid-template-columns: repeat(5, 1fr) !important; gap: 10px; }
+        .stat-item { padding: 8px; border-bottom: 1px solid #eee; }
+        .stat-bar-bg { background:#eee; height:6px; border-radius:3px; margin-top:4px; }
+        .stat-bar-fill { height:100%; background:var(--color-error); border-radius:3px; }
+        @media (max-width: 600px) {
+            .game-grid { gap: 6px; }
+            .word-card { padding: 4px !important; min-height: 60px !important; font-size: 10px !important; }
+            .russian { font-size: 12px !important; }
+            .english { font-size: 10px !important; }
+        }
+
     </style>
+    <!-- iOS App-Optimierung -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Russisch Trainer">
@@ -289,19 +364,34 @@
 
         <div class="tabs">
             <button class="tab-btn active" data-tab="game">Spiel</button>
-            <button class="tab-btn" data-tab="vocab">Vokabeln</button>
-            <button class="tab-btn" data-tab="stats">Statistik</button>
+            <button class="tab-btn" data-tab="weak">Training (Schwache)</button>
+            <button class="tab-btn" data-tab="vocab">Vokabeln verwalten</button>
+            <button class="tab-btn" data-tab="stats">Statistiken</button>
         </div>
 
         <div id="game" class="tab-content active">
             <div class="game-info">
+            <div style="text-align:right; margin-bottom:5px;"><small><a href="#" onclick="app.forceResetVocab()" style="color:#999;">Notfall-Reset</a></small></div>
                 <div class="progress">
                     <span id="matchedCount">0</span> / <span id="totalPairs">0</span> Paare
                 </div>
                 <button class="btn btn-secondary" onclick="app.startNewGame()">Mischen ↻</button>
             </div>
-            <div id="timerDisplay" class="timer">00:00</div>
             <div id="gameGrid" class="game-grid"></div>
+        </div>
+
+        <div id="weak" class="tab-content">
+            <div class="game-info">
+            <div style="text-align:right; margin-bottom:5px;"><small><a href="#" onclick="app.forceResetVocab()" style="color:#999;">Notfall-Reset</a></small></div>
+                <div class="progress">
+                    <span id="weakMatchedCount">0</span> / <span id="weakTotalPairs">0</span> Paare
+                </div>
+                <button class="btn btn-secondary" onclick="app.startWeakWordsGame()">Neu starten</button>
+            </div>
+            <div id="weakGameGrid" class="game-grid"></div>
+            <div class="button-group" style="margin-top: 20px;">
+                <p style="width:100%; text-align:center; color: #666; font-size: 0.9em;">Hier erscheinen Wörter, bei denen du Fehler gemacht hast.</p>
+            </div>
         </div>
 
         <div id="vocab" class="tab-content">
@@ -312,17 +402,19 @@
                     <input type="text" id="russianInput" placeholder="z.B. Привет">
                 </div>
                 <div class="form-group">
-                    <label for="englishInput">Übersetzung:</label>
+                    <label for="englishInput">Übersetzung (Deutsch/Englisch):</label>
                     <input type="text" id="englishInput" placeholder="z.B. Hallo">
                 </div>
                 <div class="button-group">
                     <button class="btn btn-primary" onclick="app.addVocabulary()">Hinzufügen</button>
+                    <button class="btn btn-secondary" onclick="app.clearForm()">Leeren</button>
                 </div>
+                <div id="message"></div>
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 30px; margin-bottom: 10px;">
                 <h2 style="margin: 0; font-size: 18px;">Deine Liste (<span id="vocabCount">0</span>)</h2>
-                <button class="btn btn-danger" onclick="app.resetToDefaults()">Reset (Standard)</button>
+                <button class="btn btn-danger" onclick="app.resetToDefaults()">Standard-Vokabeln laden</button>
             </div>
             
             <div id="vocabList" class="vocab-list">
@@ -334,52 +426,58 @@
             <div class="stats">
                 <div class="stat-item">
                     <div class="stat-value" id="totalVocab">0</div>
+        <div style="margin-top:30px;">
+            <h3>Fehler-Statistik</h3>
+            <div id="wordStats"></div>
+            <div style="margin-top:15px; text-align:center;">
+                <button class="btn btn-danger" onclick="app.resetWordStats()">Fehler zurücksetzen</button>
+                <div style="margin-top:10px;"><small><a href="#" onclick="app.forceResetVocab()" style="color:#999;">Notfall-Reset (Alles löschen)</a></small></div>
+            </div>
+        </div>
                     <div class="stat-label">Vokabeln</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value" id="gamesPlayed">0</div>
-                    <div class="stat-label">Spiele</div>
+                    <div class="stat-label">Runden gespielt</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value" id="totalMatches">0</div>
-                    <div class="stat-label">Treffer</div>
+                    <div class="stat-label">Gefundene Paare</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value" id="totalErrors">0</div>
                     <div class="stat-label">Fehler</div>
                 </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="weakWordsCount">0</div>
+                    <div class="stat-label">Zu üben</div>
+                </div>
             </div>
             <div style="text-align: center; margin-top: 30px;">
-                 <button class="btn btn-danger" onclick="app.clearStats()">Statistik löschen</button>
+                 <button class="btn btn-secondary" onclick="app.exportData()">Daten speichern (Backup)</button>
+                 <button class="btn btn-danger" onclick="app.clearStats()">Statistik nullen</button>
             </div>
-        </div>
+        
+        <div style="margin-top:20px;"><h3>Fehlerquote nach Wort</h3>
+        <div id="wordStats"></div>
+        <button class="btn btn-danger" style="margin-top:15px" onclick="app.resetWordStats()">Nur Fehler zurücksetzen</button></div></div>
     </div>
 
     <script>
         class VocabularyApp {
             constructor() {
-                this.vocabulary = this.loadVocabulary();
+                this.vocabulary = this.gameDeck = [];
+        this.gameDeck = []; this.loadVocabulary();
+                this.currentGame = null;
                 this.selectedCards = [];
-                this.isProcessing = false;
-                this.startTime = 0;
-                this.timerInterval = null;
-                
-                // Statistiken laden
-                this.stats = this.loadStats() || {
-                    gamesPlayed: 0,
-                    totalMatches: 0,
-                    totalErrors: 0
-                };
-                
+                this.weakSelectedCards = [];
+                this.stats = this.loadStats();
                 this.init();
             }
 
             init() {
                 this.setupEventListeners();
-                this.updateStatsUI();
-                if(document.getElementById('game').classList.contains('active')) {
-                    this.startNewGame();
-                }
+                this.updateUI();
             }
 
             setupEventListeners() {
@@ -391,24 +489,21 @@
             switchTab(tabName) {
                 document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
                 document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-                
-                const activeContent = document.getElementById(tabName);
-                const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
-                
-                if(activeContent) activeContent.classList.add('active');
-                if(activeBtn) activeBtn.classList.add('active');
+                document.getElementById(tabName).classList.add('active');
+                document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
                 
                 if (tabName === 'vocab') {
                     this.updateVocabularyList();
                 } else if (tabName === 'stats') {
-                    this.updateStatsUI();
+                    this.updateStats();
+                } else if (tabName === 'weak') {
+                    this.startWeakWordsGame();
                 }
             }
 
-            // --- DATA ---
+            // --- DATA MANAGEMENT ---
 
             getDefaultVocabulary() {
-                // HIER IST DIE KOMPLETTE LISTE, WIE GEWÜNSCHT
                 return [
                     { russian: 'красивое', english: 'beautiful' },
                     { russian: 'большое', english: 'big' },
@@ -760,262 +855,501 @@
                 try {
                     const data = localStorage.getItem('vocabulary_v3');
                     if (data) {
-                        const parsed = JSON.parse(data);
-                        if (Array.isArray(parsed) && parsed.length > 0) {
-                            return parsed;
-                        }
+                        return JSON.parse(data);
                     }
-                } catch (e) { console.error('Load error:', e); }
-
-                // Fallback to defaults
-                const defaults = this.getDefaultVocabulary();
+                } catch (e) { console.error(e); }
+                
+                // Fallback: Load defaults instantly if storage is empty
+                const defaults = this.getDefaultVocabulary().map(v => ({
+                    ...v, mistakes: 0, correct: 0
+                }));
                 this.saveVocabulary(defaults);
                 return defaults;
             }
 
-            saveVocabulary(vocab = this.vocabulary) {
-                localStorage.setItem('vocabulary_v3', JSON.stringify(vocab));
+            saveVocabulary(vocabToSave = null) {
+                if(vocabToSave) this.vocabulary = vocabToSave;
+                localStorage.setItem('vocabulary_v3', JSON.stringify(this.vocabulary));
+                this.updateCounts();
+            }
+            
+            resetToDefaults() {
+                if(confirm("Bist du sicher? Deine eigenen hinzugefügten Vokabeln werden gelöscht und durch die Standard-Liste (~300 Wörter) ersetzt.")) {
+                    const defaults = this.getDefaultVocabulary().map(v => ({
+                        ...v, mistakes: 0, correct: 0
+                    }));
+                    this.vocabulary = defaults;
+                    this.saveVocabulary();
+                    this.updateVocabularyList();
+                    this.startNewGame();
+                    alert("Alle Vokabeln geladen!");
+                }
             }
 
             loadStats() {
                 try {
-                    return JSON.parse(localStorage.getItem('vocab_stats'));
-                } catch(e) { return null; }
+                    const data = localStorage.getItem('vocabStats_v3');
+                    return data ? JSON.parse(data) : { gamesPlayed: 0, totalMatches: 0, totalErrors: 0 };
+                } catch {
+                    return { gamesPlayed: 0, totalMatches: 0, totalErrors: 0 };
+                }
             }
 
             saveStats() {
-                localStorage.setItem('vocab_stats', JSON.stringify(this.stats));
-                this.updateStatsUI();
+                localStorage.setItem('vocabStats_v3', JSON.stringify(this.stats));
+            }
+            
+            clearStats() {
+                if(confirm("Statistiken wirklich löschen?")) {
+                    this.stats = { gamesPlayed: 0, totalMatches: 0, totalErrors: 0 };
+                    this.vocabulary.forEach(v => { v.mistakes = 0; v.correct = 0; });
+                    this.saveVocabulary();
+                    this.saveStats();
+                    this.updateStats();
+                }
             }
 
-            // --- GAME LOGIC ---
+            addVocabulary() {
+                const russian = document.getElementById('russianInput').value.trim();
+                const english = document.getElementById('englishInput').value.trim();
+                const messageDiv = document.getElementById('message');
 
-            startNewGame() {
-                this.stopTimer();
-                const gameGrid = document.getElementById('gameGrid');
-                gameGrid.innerHTML = '';
-                this.selectedCards = [];
-                this.isProcessing = false;
-
-                // 10 Zufällige Paare auswählen
-                const deck = [...this.vocabulary].sort(() => 0.5 - Math.random()).slice(0, 10);
-                
-                this.setupGameGrid(deck, 'gameGrid');
-                
-                // UI Update
-                document.getElementById('totalPairs').textContent = deck.length;
-                document.getElementById('matchedCount').textContent = '0';
-                this.startTimer();
-                
-                // Stats
-                this.stats.gamesPlayed++;
-                this.saveStats();
-            }
-
-            setupGameGrid(deck, containerId) {
-                const container = document.getElementById(containerId);
-                container.innerHTML = '';
-                
-                let cards = [];
-                deck.forEach((pair, index) => {
-                    // Karte 1: Russisch
-                    cards.push({
-                        id: index,
-                        text: pair.russian,
-                        type: 'russian',
-                        pairRef: pair
-                    });
-                    // Karte 2: Englisch
-                    cards.push({
-                        id: index,
-                        text: pair.english,
-                        type: 'english',
-                        pairRef: pair
-                    });
-                });
-
-                // Karten mischen
-                cards.sort(() => 0.5 - Math.random());
-
-                cards.forEach(cardData => {
-                    const card = document.createElement('div');
-                    card.className = 'word-card';
-                    
-                    const text = document.createElement('div');
-                    text.className = cardData.type === 'russian' ? 'russian' : 'english';
-                    text.textContent = cardData.text;
-                    card.appendChild(text);
-
-                    card.dataset.id = cardData.id;
-                    card.dataset.type = cardData.type;
-
-                    card.addEventListener('click', () => this.handleCardClick(card, cardData));
-                    container.appendChild(card);
-                });
-            }
-
-            handleCardClick(cardElement, cardData) {
-                if (this.isProcessing || 
-                    cardElement.classList.contains('matched') || 
-                    cardElement.classList.contains('selected')) {
+                if (!russian || !english) {
+                    this.showMessage('Bitte beide Felder ausfüllen', 'error', messageDiv);
                     return;
                 }
 
-                this.speak(cardData.text, cardData.type);
-                
-                cardElement.classList.add('selected');
-                this.selectedCards.push({ el: cardElement, data: cardData });
-
-                if (this.selectedCards.length === 2) {
-                    this.checkMatch();
-                }
+                this.vocabulary.push({ russian, english, mistakes: 0, correct: 0 });
+                this.saveVocabulary();
+                this.clearForm();
+                this.showMessage('Gespeichert! ✓', 'success', messageDiv);
+                this.updateVocabularyList();
             }
 
-            checkMatch() {
-                this.isProcessing = true;
-                const [card1, card2] = this.selectedCards;
-
-                const isMatch = card1.data.id === card2.data.id;
-
-                if (isMatch) {
-                    card1.el.classList.remove('selected');
-                    card2.el.classList.remove('selected');
-                    card1.el.classList.add('matched');
-                    card2.el.classList.add('matched');
-                    
-                    this.stats.totalMatches++;
-                    this.updateProgress();
-                    
-                    this.selectedCards = [];
-                    this.isProcessing = false;
-                    
-                    // Check win
-                    const matchedCount = document.querySelectorAll('#gameGrid .word-card.matched').length;
-                    if (matchedCount === document.querySelectorAll('#gameGrid .word-card').length) {
-                        this.stopTimer();
-                        setTimeout(() => alert('🎉 Молодец! (Gut gemacht!)'), 500);
-                    }
-                } else {
-                    card1.el.classList.add('error');
-                    card2.el.classList.add('error');
-                    this.stats.totalErrors++;
-
-                    setTimeout(() => {
-                        card1.el.classList.remove('selected', 'error');
-                        card2.el.classList.remove('selected', 'error');
-                        this.selectedCards = [];
-                        this.isProcessing = false;
-                    }, 1000);
-                }
-                this.saveStats();
-            }
-
-            updateProgress() {
-                const current = parseInt(document.getElementById('matchedCount').textContent) || 0;
-                document.getElementById('matchedCount').textContent = current + 1;
-            }
-
-            // --- UTILS ---
-
-            speak(text, type) {
-                if (!('speechSynthesis' in window)) return;
-                // Nur Russisch sprechen
-                if (type === 'russian') {
-                    const utterance = new SpeechSynthesisUtterance(text);
-                    utterance.lang = 'ru-RU';
-                    window.speechSynthesis.speak(utterance);
-                }
-            }
-
-            // --- TIMER ---
-
-            startTimer() {
-                this.stopTimer();
-                this.startTime = Date.now();
-                const timerEl = document.getElementById('timerDisplay');
-                if(timerEl) timerEl.textContent = '00:00';
-                
-                this.timerInterval = setInterval(() => {
-                    const s = Math.floor((Date.now() - this.startTime) / 1000);
-                    const mins = Math.floor(s/60).toString().padStart(2,'0');
-                    const secs = (s%60).toString().padStart(2,'0');
-                    if(timerEl) timerEl.textContent = `${mins}:${secs}`;
-                }, 1000);
-            }
-
-            stopTimer() {
-                if (this.timerInterval) clearInterval(this.timerInterval);
-            }
-
-            // --- VOCAB MANAGEMENT & STATS ---
-
-            addVocabulary() {
-                const ru = document.getElementById('russianInput').value.trim();
-                const en = document.getElementById('englishInput').value.trim();
-                if(ru && en) {
-                    this.vocabulary.push({ russian: ru, english: en });
-                    this.saveVocabulary();
-                    this.updateVocabularyList();
-                    document.getElementById('russianInput').value = '';
-                    document.getElementById('englishInput').value = '';
-                    alert('Vokabel hinzugefügt!');
-                }
-            }
-
-            updateVocabularyList() {
-                const list = document.getElementById('vocabList');
-                list.innerHTML = '';
-                document.getElementById('vocabCount').textContent = this.vocabulary.length;
-
-                this.vocabulary.forEach((item, index) => {
-                    const div = document.createElement('div');
-                    div.className = 'vocab-item';
-                    div.innerHTML = `
-                        <div>
-                            <div class="vocab-russian">${item.russian} 
-                                <button class="btn-speak" onclick="app.speak('${item.russian}', 'russian')">🔊</button>
-                            </div>
-                            <div class="vocab-english">${item.english}</div>
-                        </div>
-                        <button class="btn-delete" onclick="app.deleteVocab(${index})">Löschen</button>
-                    `;
-                    list.appendChild(div);
-                });
-            }
-
-            deleteVocab(index) {
-                if(confirm('Wirklich löschen?')) {
+            deleteVocabulary(index) {
+                if(confirm("Wort wirklich löschen?")) {
                     this.vocabulary.splice(index, 1);
                     this.saveVocabulary();
                     this.updateVocabularyList();
                 }
             }
-            
-            resetToDefaults() {
-                if(confirm('Achtung: Dadurch werden deine eigenen Vokabeln gelöscht und die Standard-Liste wiederhergestellt.')) {
-                    this.vocabulary = this.getDefaultVocabulary();
-                    this.saveVocabulary();
-                    this.updateVocabularyList();
-                }
+
+            clearForm() {
+                document.getElementById('russianInput').value = '';
+                document.getElementById('englishInput').value = '';
+                document.getElementById('message').innerHTML = '';
             }
 
-            updateStatsUI() {
-                document.getElementById('totalVocab').textContent = this.vocabulary.length;
+            showMessage(text, type, element) {
+                element.innerHTML = `<div class="message ${type}">${text}</div>`;
+                setTimeout(() => element.innerHTML = '', 3000);
+            }
+
+            updateUI() {
+                this.updateCounts();
+                this.startNewGame();
+            }
+
+            updateCounts() {
+                const count = this.vocabulary.length;
+                document.getElementById('vocabCount').textContent = count;
+                document.getElementById('totalVocab').textContent = count;
+            }
+
+            updateVocabularyList() {
+                const container = document.getElementById('vocabList');
+                if (this.vocabulary.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: var(--color-text-secondary); padding: 20px;">Keine Vokabeln vorhanden.</p>';
+                    return;
+                }
+
+                container.innerHTML = this.vocabulary.map((vocab, index) => `
+                    <div class="vocab-item">
+                        <div class="vocab-words">
+                            <div class="vocab-russian">
+                                <button class="btn-speak" onclick="app.speak('${vocab.russian.replace(/'/g, "\\'")}', 'ru')" title="Anhören">🔊</button>
+                                ${this.escapeHtml(vocab.russian)}
+                            </div>
+                            <div class="vocab-english">${this.escapeHtml(vocab.english)}</div>
+                        </div>
+                        <button class="btn-delete" onclick="app.deleteVocabulary(${index})">X</button>
+                    </div>
+                `).join('');
+            }
+
+            updateStats() {
                 document.getElementById('gamesPlayed').textContent = this.stats.gamesPlayed;
                 document.getElementById('totalMatches').textContent = this.stats.totalMatches;
-                document.getElementById('totalErrors').textContent = this.stats.totalErrors;
-            }
-            
-            clearStats() {
-                if(confirm('Statistik wirklich löschen?')) {
-                    this.stats = { gamesPlayed: 0, totalMatches: 0, totalErrors: 0 };
-                    this.saveStats();
+                document.getElementById('totalErrors').textContent = this.stats.totalErrors || 0;
+                document.getElementById('weakWordsCount').textContent = this.vocabulary.filter(v => v.mistakes > 0).length;
+
+                const list = document.getElementById('wordStats');
+                if(list) {
+                    const err = this.vocabulary.filter(v => v.mistakes > 0).sort((a,b)=>b.mistakes-a.mistakes).slice(0,50);
+                    list.innerHTML = err.length ? err.map(v => `
+                        <div class="stat-item">
+                            <div style="display:flex;justify-content:space-between;">
+                                <span><b>${v.russian}</b></span>
+                                <span style="color:red">${v.mistakes}x</span>
+                            </div>
+                            <div style="font-size:12px;color:#666">${v.english}</div>
+                            <div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${Math.min(100,v.mistakes*10)}%"></div></div>
+                        </div>`).join('') : '<p>Keine Fehler.</p>';
                 }
             }
-        }
 
-        // App starten
+            // --- GAME LOGIC ---
+
+            startNewGame() {
+                this.startTimer();
+                if(!this.vocabulary || this.vocabulary.length < 5) this.gameDeck = []; this.loadVocabulary();
+                if(this.vocabulary.length < 2) return;
+
+                const totalTarget = 25;
+                const visibleLimit = 5;
+                const available = Math.min(totalTarget, this.vocabulary.length);
+
+                if(!this.gameDeck || this.gameDeck.length < available) {
+                    this.gameDeck = this.vocabulary.map((_,i)=>i).sort(()=>Math.random()-0.5);
+                }
+
+                const selectedIndices = this.gameDeck.splice(0, available);
+                const selectedWords = selectedIndices.map(i => this.vocabulary[i]);
+
+                const initial = selectedWords.slice(0, visibleLimit);
+                this.pairQueue = selectedWords.slice(visibleLimit);
+
+                this.setupGameGrid(initial, 'gameGrid', false);
+                this.stats.gamesPlayed++;
+                this.saveStats();
+            }
+
+            startWeakWordsGame() {
+                const weakWords = this.vocabulary.filter(v => v.mistakes > 0 && v.correct < 2);
+                if (weakWords.length === 0) {
+                    document.getElementById('weakGameGrid').innerHTML = '<div style="text-align:center; padding:40px;">🎉 Alles super! Keine schwachen Wörter momentan.</div>';
+                    return;
+                }
+                const selected = weakWords.sort(() => Math.random() - 0.5).slice(0, 10);
+                this.setupGameGrid(selected, 'weakGameGrid', true);
+            }
+
+            setupGameGrid(selectedPairs, elementId, isWeakMode) {
+                const cards = [];
+                selectedPairs.forEach((vocab, index) => {
+                    const realIndex = this.vocabulary.indexOf(vocab);
+                    cards.push({ id: `p${index}-ru`, text: vocab.russian, lang: 'ru', pairId: index, realIndex: realIndex });
+                    cards.push({ id: `p${index}-en`, text: vocab.english, lang: 'en', pairId: index, realIndex: realIndex });
+                });
+
+                const ruCards = cards.filter(c => c.lang === 'ru').sort(() => Math.random() - 0.5);
+                const enCards = cards.filter(c => c.lang === 'en').sort(() => Math.random() - 0.5);
+
+                const gameObj = {
+                    pairs: selectedPairs, cardsLeft: ruCards, cardsRight: enCards, allCards: [...ruCards, ...enCards], matched: [],
+                    pairsCount: selectedPairs.length,
+                    totalPairs: selectedPairs.length + (this.pairQueue ? this.pairQueue.length : 0),
+                    completed: 0,
+                    totalPairs: selectedPairs.length + (this.pairQueue ? this.pairQueue.length : 0),
+                    completed: 0
+                };
+
+                if (isWeakMode) {
+                    this.weakGame = gameObj;
+                    this.weakSelectedCards = [];
+                } else {
+                    this.currentGame = gameObj;
+                    this.selectedCards = [];
+                }
+
+                this.renderGrid(elementId, isWeakMode);
+            }
+
+            renderGrid(elementId, isWeakMode) {
+                const game = isWeakMode ? this.weakGame : this.currentGame;
+                const selection = isWeakMode ? this.weakSelectedCards : this.selectedCards;
+                const grid = document.getElementById(elementId);
+                
+                const renderCard = (card) => {
+                    const isSelected = selection.some(s => s.id === card.id);
+                    const isMatched = game.matched.includes(card.id);
+                    
+                    return `
+                    <div class="word-card ${isMatched ? 'matched' : ''} ${isSelected ? 'selected' : ''}"
+                        onclick="app.handleCardClick('${card.id}', ${isWeakMode})"
+                    >
+                        <div class="${card.lang === 'ru' ? 'russian' : 'english'}">${this.escapeHtml(card.text)}</div>
+                        ${card.lang === 'ru' ? '<div class="speaker-icon">🔊</div>' : ''}
+                    </div>
+                    `;
+                };
+
+                const leftCol = game.cardsLeft.map(renderCard).join('');
+                const rightCol = game.cardsRight.map(renderCard).join('');
+
+                grid.innerHTML = `
+                    <div class="game-grid-column">${leftCol}</div>
+                    <div class="game-grid-column">${rightCol}</div>
+                `;
+
+                const countElem = isWeakMode ? 'weakMatchedCount' : 'matchedCount';
+                const totalElem = isWeakMode ? 'weakTotalPairs' : 'totalPairs';
+                document.getElementById(countElem).textContent = game.matched.length / 2;
+                document.getElementById(totalElem).textContent = game.pairsCount;
+            }
+
+            handleCardClick(cardId, isWeakMode) {
+                const game = isWeakMode ? this.weakGame : this.currentGame;
+                let selection = isWeakMode ? this.weakSelectedCards : this.selectedCards;
+                
+                const card = game.allCards.find(c => c.id === cardId);
+                if (!card || game.matched.includes(card.id)) return;
+
+                if (card.lang === 'ru') {
+                    this.speak(card.text, 'ru');
+                }
+
+                if (selection.some(s => s.id === cardId)) return;
+                
+                selection.push(card);
+
+                if (isWeakMode) this.weakSelectedCards = selection;
+                else this.selectedCards = selection;
+
+                this.renderGrid(isWeakMode ? 'weakGameGrid' : 'gameGrid', isWeakMode);
+
+                if (selection.length === 2) {
+                    const [c1, c2] = selection;
+                    
+                    const gridId = isWeakMode ? 'weakGameGrid' : 'gameGrid';
+                    document.getElementById(gridId).style.pointerEvents = 'none';
+
+                    if (c1.pairId === c2.pairId) {
+                    setTimeout(() => {
+                        game.matched.push(c1.id, c2.id);
+                        this.updateWordStats(c1.realIndex, true);
+                        game.completed++;
+
+                        // Refill
+                        if (this.pairQueue && this.pairQueue.length > 0) {
+                            const next = this.pairQueue.shift();
+                            const pid = Date.now() + Math.random();
+                            const idx = this.vocabulary.indexOf(next);
+
+                            // Remove old
+                            game.cardsLeft = game.cardsLeft.filter(c => c.pairId !== c1.pairId);
+                            game.cardsRight = game.cardsRight.filter(c => c.pairId !== c1.pairId);
+
+                            // Add new
+                            const ru = { id: `p${pid}-ru`, text: next.russian, lang: 'ru', pairId: pid, realIndex: idx };
+                            const en = { id: `p${pid}-en`, text: next.english, lang: 'en', pairId: pid, realIndex: idx };
+                            game.cardsLeft.push(ru); game.cardsRight.push(en);
+                            game.allCards = [...game.cardsLeft, ...game.cardsRight];
+                        }
+
+                        this.finishTurn(isWeakMode);
+
+                        // UI Update
+                        const cEl = document.getElementById(isWeakMode?'weakMatchedCount':'matchedCount');
+                        const tEl = document.getElementById(isWeakMode?'weakTotalPairs':'totalPairs');
+                        if(cEl) cEl.textContent = game.completed;
+                        if(tEl) tEl.textContent = game.totalPairs;
+
+                        if (game.completed >= game.totalPairs) {
+                            this.stopTimer();
+                            this.stats.totalMatches += game.totalPairs;
+                            this.saveStats();
+                            setTimeout(() => alert(`🎉 Runde geschafft! ${game.totalPairs} Paare!`), 150);
+                        }
+                    }, 150);
+                    } else {
+                        setTimeout(() => {
+                            document.querySelectorAll(`#${gridId} .selected`).forEach(el => el.classList.add('error'));
+                            this.stats.totalErrors++;
+                            this.updateWordStats(c1.realIndex, false);
+                            this.updateWordStats(c2.realIndex, false);
+                            this.saveStats();
+                            
+                            setTimeout(() => {
+                                this.finishTurn(isWeakMode);
+                            }, 800);
+                        }, 400);
+                    }
+                }
+            }
+
+            finishTurn(isWeakMode) {
+                if (isWeakMode) this.weakSelectedCards = [];
+                else this.selectedCards = [];
+                
+                const gridId = isWeakMode ? 'weakGameGrid' : 'gameGrid';
+                document.getElementById(gridId).style.pointerEvents = 'auto';
+                this.renderGrid(gridId, isWeakMode);
+            }
+
+            updateWordStats(index, isCorrect) {
+                if (index === undefined || index < 0) return;
+                if (isCorrect) {
+                    this.vocabulary[index].correct++;
+                    if (this.vocabulary[index].correct >= 2) this.vocabulary[index].mistakes = 0; 
+                } else {
+                    this.vocabulary[index].mistakes++;
+                }
+                this.saveVocabulary();
+            }
+
+            speak(text, lang) {
+                if (!window.speechSynthesis) {
+                    console.warn('Speech Synthesis nicht verfügbar');
+                    return;
+                }
+
+                window.speechSynthesis.cancel();
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.85;
+                utterance.volume = 1.0;
+
+                const speakWithVoice = () => {
+                    const voices = window.speechSynthesis.getVoices();
+
+                    if (lang === 'ru') {
+                        let ruVoice = voices.find(v => v.name.includes('Irina'));
+                        if (!ruVoice) ruVoice = voices.find(v => v.lang === 'ru-RU');
+                        if (!ruVoice) ruVoice = voices.find(v => v.lang.startsWith('ru'));
+
+                        if (ruVoice) {
+                            utterance.voice = ruVoice;
+                            console.log('✓ Russische Stimme:', ruVoice.name);
+                        } else {
+                            console.warn('⚠ Keine russische Stimme');
+                            const defaultVoice = voices.find(v => v.default) || voices[0];
+                            if (defaultVoice) {
+                                utterance.voice = defaultVoice;
+                            }
+                        }
+                        utterance.lang = 'ru-RU';
+                    } else {
+                        utterance.lang = 'de-DE';
+                    }
+
+                    utterance.onerror = (event) => {
+                        console.error('❌ Fehler:', event.error);
+                    };
+
+                    console.log('🔊', text);
+                    window.speechSynthesis.speak(utterance);
+                };
+
+                const voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    speakWithVoice();
+                } else {
+                    setTimeout(speakWithVoice, 100);
+                }
+            }
+
+            escapeHtml(text) {
+                if(!text) return '';
+                return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+            }
+            
+            exportData() {
+                const data = { vocab: this.vocabulary, stats: this.stats };
+                const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'russisch-trainer-backup.json';
+                a.click();
+            }
+        
+            // --- NEW METHODS START ---
+            startTimer() {
+                this.stopTimer(); 
+                this.startTime = Date.now();
+                const el = document.getElementById('timer');
+                if(el) el.textContent = '00:00';
+                this.timerInterval = setInterval(() => {
+                    const s = Math.floor((Date.now() - this.startTime) / 1000);
+                    if(el) el.textContent = `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
+                }, 100);
+            }
+
+            stopTimer() { 
+                if(this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; } 
+            }
+
+            resetWordStats() {
+                if(confirm('Möchtest du nur die Fehlerzähler zurücksetzen?')) {
+                    this.vocabulary.forEach(v => { v.mistakes = 0; v.correct = 0; });
+                    this.saveVocabulary();
+                    this.updateStats();
+                    alert('Erledigt.');
+                }
+            }
+
+            forceResetVocab() {
+                if(confirm('Achtung: Dies setzt alle Vokabeln auf den Standard zurück.')) {
+                    localStorage.removeItem('vocabulary_v3');
+                    location.reload();
+                }
+            }
+            // --- NEW METHODS END ---
+
+            startTimer() {
+                this.stopTimer(); this.startTime = Date.now();
+                const el = document.getElementById('timer');
+                if(el) el.textContent = '00:00';
+                this.timerInterval = setInterval(() => {
+                    const s = Math.floor((Date.now() - this.startTime)/1000);
+                    if(el) el.textContent = `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
+                }, 100);
+            }
+            stopTimer() { if(this.timerInterval) clearInterval(this.timerInterval); }
+
+            resetWordStats() {
+                if(confirm('Fehlerzähler löschen?')) {
+                    this.vocabulary.forEach(v => {v.mistakes=0; v.correct=0;});
+                    this.saveVocabulary(); this.updateStats();
+                }
+            }
+            forceResetVocab() {
+                if(confirm('Alles löschen und neu laden?')) {
+                    localStorage.removeItem('vocabulary_v3');
+                    location.reload();
+                }
+            }
+}
+
         const app = new VocabularyApp();
+
+        // Stimmen-Check
+        if (window.speechSynthesis) {
+            window.speechSynthesis.getVoices();
+
+            const checkVoices = () => {
+                const voices = window.speechSynthesis.getVoices();
+                console.log('🔊 Stimmen:', voices.length);
+
+                const ruVoices = voices.filter(v => 
+                    v.lang.startsWith('ru') || v.name.includes('Irina')
+                );
+
+                if (ruVoices.length > 0) {
+                    console.log('✅ Russische Stimme gefunden:', ruVoices[0].name);
+                } else {
+                    console.warn('⚠ Keine russische Stimme installiert');
+                    console.warn('iOS: Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen');
+                    console.warn('Windows: Einstellungen → Sprache → Russisch → Sprachoptionen');
+                }
+            };
+
+            if (window.speechSynthesis.getVoices().length > 0) {
+                checkVoices();
+            }
+            window.speechSynthesis.addEventListener('voiceschanged', checkVoices);
+        }
     </script>
 </body>
 </html>
