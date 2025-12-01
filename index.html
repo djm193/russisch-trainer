@@ -270,7 +270,7 @@
                 font-size: 24px;
             }
 
-            /* WICHTIG: Grid bleibt 2-spaltig auf Mobile! */
+            /* Grid bleibt 2-spaltig */
             .game-grid {
                 grid-template-columns: 1fr 1fr;
                 gap: 10px;
@@ -280,22 +280,21 @@
                 gap: 10px;
             }
 
-            /* Kleinere Karten für Mobile Hochformat */
+            /* Kompaktere Karten für Mobile */
             .word-card {
-                min-height: 80px;
+                min-height: 85px;
                 padding: 12px 8px;
             }
 
-            /* Optimierte Schriftgrößen */
+            /* Angepasste Schriftgrößen */
             .russian {
-                font-size: 15px;
+                font-size: 16px;
             }
 
             .english {
-                font-size: 13px;
+                font-size: 14px;
             }
 
-            /* Game Info anpassen */
             .game-info {
                 flex-direction: column;
                 gap: 12px;
@@ -304,7 +303,6 @@
                 padding: 12px;
             }
 
-            /* Buttons optimieren */
             .button-group {
                 gap: 8px;
             }
@@ -314,7 +312,6 @@
                 font-size: 14px;
             }
 
-            /* Tabs scrollbar */
             .tabs {
                 gap: 8px;
             }
@@ -952,8 +949,10 @@
             startNewGame() {
                 if (this.vocabulary.length < 2) return;
 
-                // Logic: 8 pairs (mobile friendly). Prioritize weak words (50%), then random.
-                const pairsNeeded = Math.min(8, this.vocabulary.length);
+                // Mobile: 4 pairs, Desktop: 8 pairs (no scrolling needed!)
+                const isMobile = window.innerWidth <= 600;
+                const maxPairs = isMobile ? 4 : 8;
+                const pairsNeeded = Math.min(maxPairs, this.vocabulary.length);
                 const weakWords = this.vocabulary.filter(v => v.mistakes > v.correct);
                 const otherWords = this.vocabulary.filter(v => v.mistakes <= v.correct);
                 
@@ -1142,7 +1141,6 @@
                     const voices = window.speechSynthesis.getVoices();
 
                     if (lang === 'ru') {
-                        // Suche nach Microsoft Irina (Windows) oder anderen russischen Stimmen
                         let ruVoice = voices.find(v => v.name.includes('Irina'));
                         if (!ruVoice) ruVoice = voices.find(v => v.lang === 'ru-RU');
                         if (!ruVoice) ruVoice = voices.find(v => v.lang.startsWith('ru'));
@@ -1151,11 +1149,10 @@
                             utterance.voice = ruVoice;
                             console.log('✓ Russische Stimme:', ruVoice.name);
                         } else {
-                            console.warn('⚠ Keine russische Stimme installiert');
+                            console.warn('⚠ Keine russische Stimme');
                             const defaultVoice = voices.find(v => v.default) || voices[0];
                             if (defaultVoice) {
                                 utterance.voice = defaultVoice;
-                                console.log('Verwende:', defaultVoice.name, '(', defaultVoice.lang, ')');
                             }
                         }
                         utterance.lang = 'ru-RU';
@@ -1167,7 +1164,7 @@
                         console.error('❌ Fehler:', event.error);
                     };
 
-                    console.log('🔊 Spreche:', text);
+                    console.log('🔊', text);
                     window.speechSynthesis.speak(utterance);
                 };
 
@@ -1197,48 +1194,31 @@
 
         const app = new VocabularyApp();
 
-        // ═══════════════════════════════════════════════════
-        // STIMMEN-CHECK (Windows & iOS)
-        // ═══════════════════════════════════════════════════
+        // Stimmen-Check
         if (window.speechSynthesis) {
             window.speechSynthesis.getVoices();
 
-            const showVoiceStatus = () => {
+            const checkVoices = () => {
                 const voices = window.speechSynthesis.getVoices();
-                console.log('\n╔════════════════════════════════════════╗');
-                console.log('║     STIMMEN-CHECK                      ║');
-                console.log('╚════════════════════════════════════════╝');
-                console.log(`Verfügbare Stimmen: ${voices.length}\n`);
+                console.log('🔊 Stimmen:', voices.length);
 
-                voices.forEach((v, i) => {
-                    const marker = v.default ? '⭐' : '  ';
-                    console.log(`${marker} ${String(i+1).padStart(2, ' ')}. ${v.name} [${v.lang}]`);
-                });
-
-                console.log('\n' + '─'.repeat(50));
                 const ruVoices = voices.filter(v => 
-                    v.lang.startsWith('ru') || 
-                    v.lang.includes('RU') || 
-                    v.name.includes('Irina')
+                    v.lang.startsWith('ru') || v.name.includes('Irina')
                 );
 
                 if (ruVoices.length > 0) {
-                    console.log('✅ RUSSISCHE STIMME GEFUNDEN!');
-                    ruVoices.forEach(v => console.log(`   → ${v.name} (${v.lang})`));
-                    console.log('\n🎉 Bereit! Klicken Sie auf russische Wörter.');
+                    console.log('✅ Russische Stimme gefunden:', ruVoices[0].name);
                 } else {
-                    console.warn('\n❌ KEINE RUSSISCHE STIMME!\n');
-                    console.warn('📱 iOS: Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen → Russisch');
-                    console.warn('💻 Windows: Einstellungen → Zeit & Sprache → Russisch → Sprachoptionen → Text-zu-Sprache');
-                    console.warn('\n⚠ Wird vorerst mit Standard-Stimme vorgelesen.');
+                    console.warn('⚠ Keine russische Stimme installiert');
+                    console.warn('iOS: Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen');
+                    console.warn('Windows: Einstellungen → Sprache → Russisch → Sprachoptionen');
                 }
-                console.log('\n' + '═'.repeat(50) + '\n');
             };
 
             if (window.speechSynthesis.getVoices().length > 0) {
-                showVoiceStatus();
+                checkVoices();
             }
-            window.speechSynthesis.addEventListener('voiceschanged', showVoiceStatus);
+            window.speechSynthesis.addEventListener('voiceschanged', checkVoices);
         }
     </script>
 </body>
