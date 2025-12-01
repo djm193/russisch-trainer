@@ -432,7 +432,7 @@
             <div style="text-align: center; margin-top: 30px;">
                  <button class="btn btn-secondary" onclick="app.exportData()">Daten speichern (Backup)</button>
                  <button class="btn btn-danger" onclick="app.clearStats()">Statistik nullen</button>
-            <button class="btn btn-danger" style="background-color:#ff9800;border-color:#f57c00;" onclick="app.resetWordStats()">Nur Fehler zurücksetzen</button>
+            <button class="btn btn-danger" style="background-color:#ff9800;" onclick="app.resetWordStats()">Nur Fehler zurücksetzen</button>
             </div>
         
         <div style="margin-top: 30px;">
@@ -445,6 +445,7 @@
         class VocabularyApp {
             constructor() {
                 this.vocabulary = this.gameDeck = [];
+        this.currentGameQueue = [];
         this.loadVocabulary();
                 this.currentGame = null;
                 this.selectedCards = [];
@@ -879,7 +880,7 @@
             
             
             resetWordStats() {
-                if (!confirm('Nur die Fehler-Balken zurücksetzen? Die Gesamtstatistik bleibt erhalten.')) return;
+                if (!confirm('Nur Fehler zurücksetzen? Gespielte Runden bleiben.')) return;
                 this.vocabulary.forEach(v => { v.mistakes = 0; v.correct = 0; });
                 this.saveVocabulary();
                 this.updateStats();
@@ -968,10 +969,8 @@
                 document.getElementById('totalErrors').textContent = this.stats.totalErrors || 0;
                 const weakWords = this.vocabulary.filter(v => v.mistakes > 0 && v.correct < 3).length;
                 document.getElementById('weakWordsCount').textContent = weakWords;
-
                 const sorted = [...this.vocabulary].filter(v => v.mistakes > 0)
-                    .sort((a, b) => (b.mistakes / (b.correct + b.mistakes)) - (a.mistakes / (a.correct + a.mistakes)));
-
+                    .sort((a,b) => (b.mistakes/(b.correct+b.mistakes)) - (a.mistakes/(a.correct+a.mistakes)));
                 const list = document.getElementById('wordStatsList');
                 if (list) {
                     if (sorted.length === 0) {
@@ -979,19 +978,10 @@
                     } else {
                         list.innerHTML = sorted.map(v => {
                             const total = v.correct + v.mistakes;
-                            const errorRate = (v.mistakes / total) * 100;
-                            const barWidth = Math.min(100, errorRate);
-                            const color = errorRate > 50 ? 'var(--color-error)' : '#ff9800';
-                            return `<div class="stat-item">
-                                <div class="stat-info">
-                                    <div style="font-weight:600;">${this.escapeHtml(v.russian)} → ${this.escapeHtml(v.english)}</div>
-                                    <div style="font-size:13px;color:#666;">✓ ${v.correct} | ✗ ${v.mistakes}</div>
-                                </div>
-                                <div class="stat-bar-container">
-                                    <div style="width:45px;text-align:right;">${Math.round(errorRate)}%</div>
-                                    <div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${barWidth}%;background:${color};"></div></div>
-                                </div>
-                            </div>`;
+                            const rate = (v.mistakes / total) * 100;
+                            const w = Math.min(100, rate);
+                            const c = rate > 50 ? 'var(--color-error)' : '#ff9800';
+                            return `<div class="stat-item"><div class="stat-info"><div style="font-weight:600;">${this.escapeHtml(v.russian)} → ${this.escapeHtml(v.english)}</div><div style="font-size:13px;color:#666;">✓ ${v.correct} | ✗ ${v.mistakes}</div></div><div class="stat-bar-container"><div style="width:45px;text-align:right;">${Math.round(rate)}%</div><div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${w}%;background:${c};"></div></div></div></div>`;
                         }).join('');
                     }
                 }
@@ -1002,8 +992,11 @@
             startNewGame() {
                 this.startTimer();
                 if (this.vocabulary.length < 2) return;
-                const maxPairs = 5;
-                const pairsNeeded = Math.min(maxPairs, this.vocabulary.length);
+
+                const totalPairs = 25; // 25 pairs per round
+                const visiblePairs = 5; // 5 visible at once (iPhone optimized)
+                const pairsNeeded = Math.min(totalPairs, this.vocabulary.length);
+
                 if (this.gameDeck.length < pairsNeeded) {
                     const indices = this.vocabulary.map((_, i) => i);
                     for (let i = indices.length - 1; i > 0; i--) {
@@ -1012,8 +1005,12 @@
                     }
                     this.gameDeck = indices;
                 }
+
                 const selectedIndices = this.gameDeck.splice(0, pairsNeeded);
-                const selected = selectedIndices.map(i => this.vocabulary[i]);
+                const allPairs = selectedIndices.map(i => this.vocabulary[i]);
+                const visible = allPairs.slice(0, visiblePairs);
+                this.currentGameQueue = allPairs.slice(visiblePairs);
+
                 this.setupGameGrid(selected, 'gameGrid', false);
                 this.stats.gamesPlayed++;
                 this.saveStats();
@@ -1046,7 +1043,9 @@
                     cardsRight: enCards,
                     allCards: [...ruCards, ...enCards],
                     matched: [],
-                    pairsCount: selectedPairs.length
+                    pairsCount: selectedPairs.length,
+            totalPairs: (this.currentGameQueue.length + selectedPairs.length),
+            completedPairs: 0
                 };
 
                 if (isWeakMode) {
@@ -1089,8 +1088,8 @@
 
                 const countElem = isWeakMode ? 'weakMatchedCount' : 'matchedCount';
                 const totalElem = isWeakMode ? 'weakTotalPairs' : 'totalPairs';
-                document.getElementById(countElem).textContent = game.matched.length / 2;
-                document.getElementById(totalElem).textContent = game.pairsCount;
+                document.getElementById(countElem).textContent = game.completedPairs || 0;
+                document.getElementById(totalElem).textContent = game.totalPairs || game.pairsCount;
             }
 
             handleCardClick(cardId, isWeakMode) {
@@ -1123,13 +1122,31 @@
                         setTimeout(() => {
                             game.matched.push(c1.id, c2.id);
                             this.updateWordStats(c1.realIndex, true);
+                            game.completedPairs++;
+
+                            // Replace with next pair if available
+                            if (this.currentGameQueue.length > 0) {
+                                const nextPair = this.currentGameQueue.shift();
+                                const newId = Date.now() + Math.random();
+                                const realIdx = this.vocabulary.indexOf(nextPair);
+
+                                const ruCard = { id: `p${newId}-ru`, text: nextPair.russian, lang: 'ru', pairId: newId, realIndex: realIdx };
+                                const enCard = { id: `p${newId}-en`, text: nextPair.english, lang: 'en', pairId: newId, realIndex: realIdx };
+
+                                game.cardsLeft = game.cardsLeft.filter(c => c.pairId !== c1.pairId);
+                                game.cardsRight = game.cardsRight.filter(c => c.pairId !== c1.pairId);
+                                game.cardsLeft.push(ruCard);
+                                game.cardsRight.push(enCard);
+                                game.allCards = [...game.cardsLeft, ...game.cardsRight];
+                            }
+
                             this.finishTurn(isWeakMode);
-                            
-                            if (game.matched.length === game.allCards.length) {
+
+                            if (game.completedPairs >= game.totalPairs) {
                                 this.stopTimer();
-                                this.stats.totalMatches += game.pairsCount;
+                                this.stats.totalMatches += game.totalPairs;
                                 this.saveStats();
-                                setTimeout(() => alert("🎉 Super! Runde beendet!"), 100);
+                                setTimeout(() => alert(`🎉 Super! ${game.totalPairs} Paare in ${document.getElementById('timer').textContent} geschafft!`), 100);
                             }
                         }, 150);
                     } else {
