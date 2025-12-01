@@ -1042,22 +1042,27 @@
                     cards.push({ id: `p${index}-en`, text: vocab.english, lang: 'en', pairId: index, realIndex: realIndex });
                 });
 
+                // Simple shuffle - we replace all 5 pairs at once, so no need for anti-adjacent
                 const ruCards = cards.filter(c => c.lang === 'ru').sort(() => Math.random() - 0.5);
                 const enCards = cards.filter(c => c.lang === 'en').sort(() => Math.random() - 0.5);
 
                 const gameObj = {
-                    pairs: selectedPairs, cardsLeft: ruCards, cardsRight: enCards, allCards: [...ruCards, ...enCards], matched: [],
+                    pairs: selectedPairs, 
+                    cardsLeft: ruCards, 
+                    cardsRight: enCards, 
+                    allCards: [...ruCards, ...enCards], 
+                    matched: [],
                     pairsCount: selectedPairs.length,
                     totalPairs: selectedPairs.length + (this.pairQueue ? this.pairQueue.length : 0),
-                    completed: 0,
-                    totalPairs: selectedPairs.length + (this.pairQueue ? this.pairQueue.length : 0),
-                    completed: 0
+                    completed: game && !isWeakMode ? game.completed || 0 : 0
                 };
 
                 if (isWeakMode) {
                     this.weakGame = gameObj;
                     this.weakSelectedCards = [];
                 } else {
+                    const game = this.currentGame;
+                    gameObj.completed = game && game.completed ? game.completed : 0;
                     this.currentGame = gameObj;
                     this.selectedCards = [];
                 }
@@ -1095,13 +1100,13 @@
                 const countElem = isWeakMode ? 'weakMatchedCount' : 'matchedCount';
                 const totalElem = isWeakMode ? 'weakTotalPairs' : 'totalPairs';
                 document.getElementById(countElem).textContent = game.matched.length / 2;
-                document.getElementById(totalElem).textContent = game.pairsCount;
+                document.getElementById(totalElem).textContent = game.totalPairs;
             }
 
             handleCardClick(cardId, isWeakMode) {
                 const game = isWeakMode ? this.weakGame : this.currentGame;
                 let selection = isWeakMode ? this.weakSelectedCards : this.selectedCards;
-                
+
                 const card = game.allCards.find(c => c.id === cardId);
                 if (!card || game.matched.includes(card.id)) return;
 
@@ -1110,7 +1115,7 @@
                 }
 
                 if (selection.some(s => s.id === cardId)) return;
-                
+
                 selection.push(card);
 
                 if (isWeakMode) this.weakSelectedCards = selection;
@@ -1120,56 +1125,63 @@
 
                 if (selection.length === 2) {
                     const [c1, c2] = selection;
-                    
+
                     const gridId = isWeakMode ? 'weakGameGrid' : 'gameGrid';
                     document.getElementById(gridId).style.pointerEvents = 'none';
 
                     if (c1.pairId === c2.pairId) {
-                    setTimeout(() => {
-                        game.matched.push(c1.id, c2.id);
-                        this.updateWordStats(c1.realIndex, true);
-                        game.completed++;
+                        // CORRECT MATCH
+                        setTimeout(() => {
+                            game.matched.push(c1.id, c2.id);
+                            this.updateWordStats(c1.realIndex, true);
+                            game.completed++;
 
-                        // Refill
-                        if (this.pairQueue && this.pairQueue.length > 0) {
-                            const next = this.pairQueue.shift();
-                            const pid = Date.now() + Math.random();
-                            const idx = this.vocabulary.indexOf(next);
+                            // Check if ALL 5 pairs of current round are matched
+                            const totalCurrentPairs = game.pairs.length;
+                            const matchedPairs = game.matched.length / 2;
 
-                            // Remove old
-                            game.cardsLeft = game.cardsLeft.filter(c => c.pairId !== c1.pairId);
-                            game.cardsRight = game.cardsRight.filter(c => c.pairId !== c1.pairId);
+                            if (matchedPairs >= totalCurrentPairs) {
+                                // ALL PAIRS MATCHED! Load next batch
+                                if (this.pairQueue && this.pairQueue.length > 0) {
+                                    // Get next 5 pairs (or remaining pairs)
+                                    const nextBatchSize = Math.min(5, this.pairQueue.length);
+                                    const nextBatch = this.pairQueue.splice(0, nextBatchSize);
 
-                            // Add new
-                            const ru = { id: `p${pid}-ru`, text: next.russian, lang: 'ru', pairId: pid, realIndex: idx };
-                            const en = { id: `p${pid}-en`, text: next.english, lang: 'en', pairId: pid, realIndex: idx };
-                            game.cardsLeft.push(ru); game.cardsRight.push(en);
-                            game.allCards = [...game.cardsLeft, ...game.cardsRight];
-                        }
+                                    // Reset game with new batch
+                                    setTimeout(() => {
+                                        this.setupGameGrid(nextBatch, 'gameGrid', false);
+                                        document.getElementById(gridId).style.pointerEvents = 'auto';
+                                    }, 500);
+                                    return;
+                                } else {
+                                    // GAME COMPLETED!
+                                    this.stopTimer();
+                                    this.stats.totalMatches += game.completed;
+                                    this.saveStats();
+                                    setTimeout(() => {
+                                        alert(`🎉 Glückwunsch! Du hast alle ${game.completed} Paare gefunden!`);
+                                    }, 300);
+                                    return;
+                                }
+                            }
 
-                        this.finishTurn(isWeakMode);
+                            this.finishTurn(isWeakMode);
 
-                        // UI Update
-                        const cEl = document.getElementById(isWeakMode?'weakMatchedCount':'matchedCount');
-                        const tEl = document.getElementById(isWeakMode?'weakTotalPairs':'totalPairs');
-                        if(cEl) cEl.textContent = game.completed;
-                        if(tEl) tEl.textContent = game.totalPairs;
-
-                        if (game.completed >= game.totalPairs) {
-                            this.stopTimer();
-                            this.stats.totalMatches += game.totalPairs;
-                            this.saveStats();
-                            setTimeout(() => alert(`🎉 Runde geschafft! ${game.totalPairs} Paare!`), 150);
-                        }
-                    }, 150);
+                            // Update UI counters
+                            const cEl = document.getElementById(isWeakMode ? 'weakMatchedCount' : 'matchedCount');
+                            const tEl = document.getElementById(isWeakMode ? 'weakTotalPairs' : 'totalPairs');
+                            if(cEl) cEl.textContent = game.completed;
+                            if(tEl) tEl.textContent = game.totalPairs;
+                        }, 150);
                     } else {
+                        // WRONG MATCH
                         setTimeout(() => {
                             document.querySelectorAll(`#${gridId} .selected`).forEach(el => el.classList.add('error'));
                             this.stats.totalErrors++;
                             this.updateWordStats(c1.realIndex, false);
                             this.updateWordStats(c2.realIndex, false);
                             this.saveStats();
-                            
+
                             setTimeout(() => {
                                 this.finishTurn(isWeakMode);
                             }, 800);
