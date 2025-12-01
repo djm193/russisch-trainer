@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Russisch Vokabel Trainer (Full)</title>
     <style>
         :root {
@@ -104,15 +104,14 @@
         }
 
         .word-card {
-            padding: var(--space-16);
+            padding: 14px;
             background-color: var(--color-surface);
             border: 2px solid #E0E0E0;
             border-radius: var(--radius-lg);
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
             text-align: center;
-            min-height: 85px;
-            height: 85px;
+            min-height: 90px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -121,6 +120,7 @@
             position: relative;
             user-select: none;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            touch-action: manipulation;
         }
 
         .word-card:hover {
@@ -166,7 +166,8 @@
             margin-bottom: 4px; 
             font-weight: 600;
             color: #1a1a1a;
-            line-height: 1.3;
+            line-height: 1.4;
+            word-break: break-word;
         }
         .speaker-icon { font-size: 16px; opacity: 0.7; margin-top: 4px; }
         .word-card.selected .speaker-icon, .word-card.matched .speaker-icon { color: white; opacity: 1; }
@@ -176,6 +177,7 @@
             font-weight: 500;
             color: #2c2c2c;
             line-height: 1.3;
+            word-break: break-word;
         }
 
         .button-group { display: flex; gap: var(--space-12); justify-content: center; flex-wrap: wrap; }
@@ -260,12 +262,74 @@
         .message.error { background-color: rgba(192, 21, 47, 0.1); color: var(--color-error); border: 1px solid var(--color-error); }
 
         @media (max-width: 600px) {
-            body { padding: var(--space-12); }
-            h1 { font-size: 24px; }
-            .game-grid { grid-template-columns: 1fr; }
-            .game-info { flex-direction: column; gap: var(--space-12); align-items: stretch; text-align: center; }
+            body {
+                padding: 12px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            /* WICHTIG: Grid bleibt 2-spaltig auf Mobile! */
+            .game-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            .game-grid-column {
+                gap: 10px;
+            }
+
+            /* Kleinere Karten für Mobile Hochformat */
+            .word-card {
+                min-height: 80px;
+                padding: 12px 8px;
+            }
+
+            /* Optimierte Schriftgrößen */
+            .russian {
+                font-size: 15px;
+            }
+
+            .english {
+                font-size: 13px;
+            }
+
+            /* Game Info anpassen */
+            .game-info {
+                flex-direction: column;
+                gap: 12px;
+                align-items: stretch;
+                text-align: center;
+                padding: 12px;
+            }
+
+            /* Buttons optimieren */
+            .button-group {
+                gap: 8px;
+            }
+
+            .btn {
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+
+            /* Tabs scrollbar */
+            .tabs {
+                gap: 8px;
+            }
+
+            .tab-btn {
+                padding: 10px 16px;
+                font-size: 13px;
+            }
         }
     </style>
+    <!-- iOS App-Optimierung -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Russisch Trainer">
+    <meta name="theme-color" content="#2180A3">
 </head>
 <body>
     <div class="container">
@@ -1078,9 +1142,10 @@
                     const voices = window.speechSynthesis.getVoices();
 
                     if (lang === 'ru') {
-                        let ruVoice = voices.find(v => v.lang === 'ru-RU');
+                        // Suche nach Microsoft Irina (Windows) oder anderen russischen Stimmen
+                        let ruVoice = voices.find(v => v.name.includes('Irina'));
+                        if (!ruVoice) ruVoice = voices.find(v => v.lang === 'ru-RU');
                         if (!ruVoice) ruVoice = voices.find(v => v.lang.startsWith('ru'));
-                        if (!ruVoice) ruVoice = voices.find(v => v.lang.toLowerCase().includes('ru'));
 
                         if (ruVoice) {
                             utterance.voice = ruVoice;
@@ -1132,36 +1197,48 @@
 
         const app = new VocabularyApp();
 
-        // === STIMMEN-INITIALISIERUNG ===
+        // ═══════════════════════════════════════════════════
+        // STIMMEN-CHECK (Windows & iOS)
+        // ═══════════════════════════════════════════════════
         if (window.speechSynthesis) {
             window.speechSynthesis.getVoices();
 
-            const showVoices = () => {
+            const showVoiceStatus = () => {
                 const voices = window.speechSynthesis.getVoices();
-                console.log('\n=== VERFÜGBARE STIMMEN ===');
-                console.log(`Gesamt: ${voices.length} Stimmen`);
+                console.log('\n╔════════════════════════════════════════╗');
+                console.log('║     STIMMEN-CHECK                      ║');
+                console.log('╚════════════════════════════════════════╝');
+                console.log(`Verfügbare Stimmen: ${voices.length}\n`);
+
                 voices.forEach((v, i) => {
                     const marker = v.default ? '⭐' : '  ';
-                    console.log(`${marker} ${i+1}. ${v.name} (${v.lang})`);
+                    console.log(`${marker} ${String(i+1).padStart(2, ' ')}. ${v.name} [${v.lang}]`);
                 });
 
-                const ruVoices = voices.filter(v => v.lang.startsWith('ru') || v.lang.includes('RU'));
+                console.log('\n' + '─'.repeat(50));
+                const ruVoices = voices.filter(v => 
+                    v.lang.startsWith('ru') || 
+                    v.lang.includes('RU') || 
+                    v.name.includes('Irina')
+                );
+
                 if (ruVoices.length > 0) {
-                    console.log(`\n✓ ${ruVoices.length} russische Stimme(n) gefunden!`);
+                    console.log('✅ RUSSISCHE STIMME GEFUNDEN!');
+                    ruVoices.forEach(v => console.log(`   → ${v.name} (${v.lang})`));
+                    console.log('\n🎉 Bereit! Klicken Sie auf russische Wörter.');
                 } else {
-                    console.warn('\n⚠ KEINE RUSSISCHE STIMME GEFUNDEN!');
-                    console.warn('Lösung: Installieren Sie eine russische Stimme:');
-                    console.warn('  Windows: Einstellungen → Zeit & Sprache → Sprache → Russisch hinzufügen');
-                    console.warn('  Mac: Systemeinstellungen → Bedienungshilfen → Gesprochene Inhalte');
-                    console.warn('  Linux: sudo apt install speech-dispatcher-ru');
+                    console.warn('\n❌ KEINE RUSSISCHE STIMME!\n');
+                    console.warn('📱 iOS: Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen → Russisch');
+                    console.warn('💻 Windows: Einstellungen → Zeit & Sprache → Russisch → Sprachoptionen → Text-zu-Sprache');
+                    console.warn('\n⚠ Wird vorerst mit Standard-Stimme vorgelesen.');
                 }
-                console.log('========================\n');
+                console.log('\n' + '═'.repeat(50) + '\n');
             };
 
             if (window.speechSynthesis.getVoices().length > 0) {
-                showVoices();
+                showVoiceStatus();
             }
-            window.speechSynthesis.addEventListener('voiceschanged', showVoices);
+            window.speechSynthesis.addEventListener('voiceschanged', showVoiceStatus);
         }
     </script>
 </body>
