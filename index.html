@@ -2,1415 +2,313 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Russisch Vokabel Trainer (Full)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Russisch Trainer Spalten</title>
     <style>
         :root {
-            --color-primary: #2180A3;
-            --color-primary-hover: #1d7491;
-            --color-surface: #FFFFFD;
-            --color-background: #FCF8F9;
-            --color-text: #134252;
-            --color-text-secondary: #626C7C;
-            --color-success: #208C8D;
-            --color-error: #C0152F;
-            --color-border: #5E5240;
-            --radius-base: 8px;
-            --radius-lg: 12px;
-            --space-8: 8px;
-            --space-12: 12px;
-            --space-16: 16px;
-            --space-20: 20px;
-            --space-32: 32px;
+            --primary: #007AFF; --bg: #F2F2F7; --card: #FFF; --text: #000; --sub: #8E8E93;
+            --danger: #FF3B30; --success: #34C759; --radius: 16px; --shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
-
-        * { box-sizing: border-box; }
-        html, body { margin: 0; padding: 0; }
-
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--color-background);
-            color: var(--color-text);
-            padding: var(--space-16);
-            line-height: 1.5;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg); color: var(--text); margin: 0; padding: 0;
+            overscroll-behavior: none; height: 100vh; height: 100dvh; display: flex; flex-direction: column;
         }
-
-        .container { max-width: 800px; margin: 0 auto; }
-
-        .header { text-align: center; margin-bottom: var(--space-32); }
-        h1 { margin: 0 0 var(--space-8) 0; font-size: 28px; color: var(--color-text); }
-        .subtitle { color: var(--color-text-secondary); font-size: 14px; }
-
-        .tabs {
-            display: flex;
-            gap: var(--space-12);
-            margin-bottom: var(--space-32);
-            border-bottom: 2px solid var(--color-border);
-            overflow-x: auto;
-            padding-bottom: 5px;
+        .nav-tabs {
+            background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            height: 50px; display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);
+            position: sticky; top: 0; z-index: 100; padding-top: env(safe-area-inset-top);
         }
-
-        .tab-btn {
-            padding: var(--space-12) var(--space-20);
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--color-text-secondary);
-            border-bottom: 3px solid transparent;
-            margin-bottom: -7px;
-            transition: all 200ms;
-            white-space: nowrap;
-        }
-
-        .tab-btn.active {
-            color: var(--color-primary);
-            border-bottom-color: var(--color-primary);
-        }
-        .tab-btn:hover { color: var(--color-text); }
-
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Game Styles */
-        .game-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--space-20);
-            padding: var(--space-16);
-            background-color: var(--color-surface);
-            border-radius: var(--radius-base);
-            border: 1px solid #E0E0E0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        .progress { font-size: 14px; color: var(--color-text-secondary); font-weight: bold; }
-
+        .tab-btn { flex: 1; border: none; background: transparent; font-size: 15px; font-weight: 600; color: var(--sub); cursor: pointer; }
+        .tab-btn.active { color: var(--primary); }
+        .content-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        .tab-content { display: none; height: 100%; flex-direction: column; padding: 16px; overflow-y: auto; }
+        .tab-content.active { display: flex; }
+        .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-shrink: 0; }
+        
+        /* NEUE ZWEI-SPALTEN STRUKTUR */
         .game-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: var(--space-20);
-            margin-bottom: var(--space-20);
+            display: grid; 
+            grid-template-columns: 1fr 1fr; /* Links = Russisch, Rechts = Englisch */
+            grid-template-rows: repeat(5, 1fr); /* 5 Paare = 5 Zeilen */
+            gap: 12px; 
+            flex: 1; 
+            height: 100%; 
+            padding-bottom: env(safe-area-inset-bottom);
         }
         
-        .game-grid-column {
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-12);
+        .card {
+            background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; cursor: pointer; position: relative; border: 2px solid transparent;
+            transition: transform 0.1s; touch-action: manipulation; height: 100%; width: 100%;
         }
-
-        .word-card {
-            padding: 14px;
-            background-color: var(--color-surface);
-            border: 2px solid #E0E0E0;
-            border-radius: var(--radius-lg);
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-            text-align: center;
-            min-height: 90px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            font-weight: 500;
-            position: relative;
-            user-select: none;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            touch-action: manipulation;
-        }
-
-        .word-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.12);
-            border-color: #B0B0B0;
-        }
-
-        .word-card.selected {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-color: #667eea;
-            transform: scale(1.02);
-            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
-        }
-
-        .word-card.matched {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            color: white;
-            border-color: #11998e;
-            opacity: 0.7;
-            cursor: default;
-            box-shadow: 0 4px 8px rgba(17, 153, 142, 0.2);
-        }
-
-        .word-card.matched:hover { transform: none; box-shadow: none; }
-
-        .word-card.error {
-            background-color: var(--color-error);
-            color: white;
-            border-color: var(--color-error);
-            animation: shake 0.4s;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-
-        .russian { 
-            font-size: 17px; 
-            margin-bottom: 4px; 
-            font-weight: 600;
-            color: #1a1a1a;
-            line-height: 1.4;
-            word-break: break-word;
-        }
-        .speaker-icon { font-size: 16px; opacity: 0.7; margin-top: 4px; }
-        .word-card.selected .speaker-icon, .word-card.matched .speaker-icon { color: white; opacity: 1; }
-        .english { 
-            font-size: 15px; 
-            opacity: 0.85;
-            font-weight: 500;
-            color: #2c2c2c;
-            line-height: 1.3;
-            word-break: break-word;
-        }
-
-        .button-group { display: flex; gap: var(--space-12); justify-content: center; flex-wrap: wrap; }
-
-        .btn {
-            padding: var(--space-12) var(--space-20);
-            border: none;
-            border-radius: var(--radius-base);
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 200ms;
-        }
-
-        .btn-primary { background-color: var(--color-primary); color: white; }
-        .btn-primary:hover { background-color: var(--color-primary-hover); transform: translateY(-1px); }
-
-        .btn-secondary { background-color: #E0E0E0; color: var(--color-text); }
-        .btn-secondary:hover { background-color: #D0D0D0; }
-        
-        .btn-danger { background-color: #ffebee; color: var(--color-error); border: 1px solid var(--color-error); }
-        .btn-danger:hover { background-color: var(--color-error); color: white; }
-
-        /* Vocabulary Management */
-        .vocab-form {
-            background-color: var(--color-surface);
-            padding: var(--space-20);
-            border-radius: var(--radius-lg);
-            margin-bottom: var(--space-20);
-            border: 1px solid #E0E0E0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-
-        .form-group { margin-bottom: var(--space-16); }
-        label { display: block; margin-bottom: var(--space-8); font-weight: 500; font-size: 14px; }
-
-        input {
-            width: 100%; padding: var(--space-12);
-            border: 1px solid #E0E0E0; border-radius: var(--radius-base);
-            font-family: inherit; font-size: 16px;
-            color: var(--color-text); background-color: var(--color-background);
-        }
-        input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(33, 128, 163, 0.1); }
-
-        .vocab-list {
-            background-color: var(--color-surface);
-            border-radius: var(--radius-lg);
-            border: 1px solid #E0E0E0;
-            max-height: 500px;
-            overflow-y: auto;
-        }
-
-        .vocab-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: var(--space-16); border-bottom: 1px solid #E0E0E0;
-        }
-        .vocab-item:last-child { border-bottom: none; }
-
-        .vocab-russian { font-weight: 600; font-size: 16px; margin-bottom: 2px; display: flex; align-items: center; gap: 10px; }
-        .vocab-english { font-size: 14px; color: var(--color-text-secondary); }
-
-        .btn-speak { background: none; border: none; cursor: pointer; font-size: 18px; padding: 4px; border-radius: 50%; transition: background 0.2s; }
-        .btn-speak:hover { background-color: #f0f0f0; }
-
-        .btn-delete {
-            padding: 6px 12px; background-color: var(--color-error); color: white;
-            border: none; border-radius: var(--radius-base); cursor: pointer; font-size: 12px;
-        }
-        .btn-delete:hover { opacity: 0.9; }
-
-        .stats {
-            background-color: var(--color-surface); padding: var(--space-20);
-            border-radius: var(--radius-lg); border: 1px solid #E0E0E0; text-align: center;
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 20px;
-        }
-
-        .stat-value { font-size: 32px; font-weight: 600; color: var(--color-primary); }
-        .stat-label { font-size: 14px; color: var(--color-text-secondary); margin-top: 5px; }
-
-        .message { padding: 10px 16px; border-radius: var(--radius-base); margin-top: 10px; font-size: 14px; text-align: center; }
-        .message.success { background-color: rgba(32, 140, 141, 0.1); color: var(--color-success); border: 1px solid var(--color-success); }
-        .message.error { background-color: rgba(192, 21, 47, 0.1); color: var(--color-error); border: 1px solid var(--color-error); }
-
-        @media (max-width: 600px) {
-            body {
-                padding: 12px;
-            }
-
-            h1 {
-                font-size: 24px;
-            }
-
-            /* Grid bleibt 2-spaltig */
-            .game-grid {
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-            }
-
-            .game-grid-column {
-                gap: 10px;
-            }
-
-            /* Kompaktere Karten für Mobile */
-            .word-card {
-                min-height: 85px;
-                padding: 12px 8px;
-            }
-
-            /* Angepasste Schriftgrößen */
-            .russian {
-                font-size: 16px;
-            }
-
-            .english {
-                font-size: 14px;
-            }
-
-            .game-info {
-                flex-direction: column;
-                gap: 12px;
-                align-items: stretch;
-                text-align: center;
-                padding: 12px;
-            }
-
-            .button-group {
-                gap: 8px;
-            }
-
-            .btn {
-                padding: 12px 16px;
-                font-size: 14px;
-            }
-
-            .tabs {
-                gap: 8px;
-            }
-
-            .tab-btn {
-                padding: 10px 16px;
-                font-size: 13px;
-            }
-        }
-    
-        .timer { font-size: 24px; font-weight: bold; color: var(--color-primary); margin-top: 12px; font-variant-numeric: tabular-nums; }
-        .game-grid { display: grid; grid-template-columns: repeat(5, 1fr) !important; gap: 10px; }
-        .stat-item { padding: 12px; border-bottom: 1px solid #E0E0E0; }
-        .stat-bar-container { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-top: 4px; }
-        .stat-bar-bg { flex: 1; height: 8px; background: #eee; border-radius: 4px; max-width: 100px; }
-        .stat-bar-fill { height: 100%; }
-        @media (max-width: 600px) {
-            .game-grid { gap: 8px; }
-            .word-card { padding: 6px !important; min-height: 65px !important; font-size: 10px !important; }
-            .russian { font-size: 12px !important; }
-            .english { font-size: 11px !important; }
-        }
-
-        .timer { font-size: 24px; font-weight: bold; color: var(--color-primary); margin-bottom: 8px; font-variant-numeric: tabular-nums; }
-        /* 5 Columns Grid */
-        .game-grid { display: grid; grid-template-columns: repeat(5, 1fr) !important; gap: 10px; }
-        .stat-item { padding: 8px; border-bottom: 1px solid #eee; }
-        .stat-bar-bg { background:#eee; height:6px; border-radius:3px; margin-top:4px; }
-        .stat-bar-fill { height:100%; background:var(--color-error); border-radius:3px; }
-        @media (max-width: 600px) {
-            .game-grid { gap: 6px; }
-            .word-card { padding: 4px !important; min-height: 60px !important; font-size: 10px !important; }
-            .russian { font-size: 12px !important; }
-            .english { font-size: 10px !important; }
-        }
-
+        .card:active { transform: scale(0.96); }
+        .card.selected { border-color: var(--primary); background-color: #E5F1FF; }
+        .card.matched { background-color: var(--success); border-color: var(--success); opacity: 0.2; pointer-events: none; }
+        .card.error { background-color: var(--danger); border-color: var(--danger); animation: shake 0.4s; }
+        .card.error .card-text, .card.error .speaker-icon { color: white; }
+        .card-text { font-size: clamp(14px, 2vh, 18px); font-weight: 600; line-height: 1.3; padding: 0 5px; }
+        .speaker-icon { color: var(--sub); margin-top: 6px; width: 20px; height: 20px; }
+        .card.selected .speaker-icon { color: var(--primary); }
+        .btn { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; }
+        .vocab-item { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; background: white; }
+        .vocab-list { background: white; border-radius: var(--radius); overflow: hidden; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat-card { background: white; padding: 20px; border-radius: var(--radius); text-align: center; box-shadow: var(--shadow); }
+        .stat-num { font-size: 28px; font-weight: 700; display: block; }
+        @keyframes shake { 0%,100% {transform:translateX(0)} 25% {transform:translateX(-5px)} 75% {transform:translateX(5px)} }
+        @keyframes fadeIn { from {opacity:0;transform:scale(0.9)} to {opacity:1;transform:scale(1)} }
     </style>
-    <!-- iOS App-Optimierung -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Russisch Trainer">
-    <meta name="theme-color" content="#2180A3">
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🇷🇺 Russisch Vokabel Trainer</h1>
-            <p class="subtitle">Lerne spielerisch neue Wörter</p>
+<nav class="nav-tabs">
+    <button class="tab-btn active" onclick="app.switchTab('game')">Spiel</button>
+    <button class="tab-btn" onclick="app.switchTab('weak')">Training</button>
+    <button class="tab-btn" onclick="app.switchTab('manage')">Liste</button>
+    <button class="tab-btn" onclick="app.switchTab('stats')">Profil</button>
+</nav>
+<div class="content-area">
+    <div id="tab-game" class="tab-content active">
+        <div class="game-header">
+            <div style="color:#8E8E93; font-weight:500" id="gameProgress">0 / 5 Paare</div>
+            <button class="btn" onclick="app.startNewGame('normal')">Neu Mischen ↻</button>
         </div>
-
-        <div class="tabs">
-            <button class="tab-btn active" data-tab="game">Spiel</button>
-            <button class="tab-btn" data-tab="weak">Training (Schwache)</button>
-            <button class="tab-btn" data-tab="vocab">Vokabeln verwalten</button>
-            <button class="tab-btn" data-tab="stats">Statistiken</button>
-        </div>
-
-        <div id="game" class="tab-content active">
-            <div class="game-info">
-            <div style="text-align:right; margin-bottom:5px;"><small><a href="#" onclick="app.forceResetVocab()" style="color:#999;">Notfall-Reset</a></small></div>
-                <div class="progress">
-                    <span id="matchedCount">0</span> / <span id="totalPairs">0</span> Paare
-                </div>
-                <button class="btn btn-secondary" onclick="app.startNewGame()">Mischen ↻</button>
-            </div>
-            <div id="gameGrid" class="game-grid"></div>
-        </div>
-
-        <div id="weak" class="tab-content">
-            <div class="game-info">
-            <div style="text-align:right; margin-bottom:5px;"><small><a href="#" onclick="app.forceResetVocab()" style="color:#999;">Notfall-Reset</a></small></div>
-                <div class="progress">
-                    <span id="weakMatchedCount">0</span> / <span id="weakTotalPairs">0</span> Paare
-                </div>
-                <button class="btn btn-secondary" onclick="app.startWeakWordsGame()">Neu starten</button>
-            </div>
-            <div id="weakGameGrid" class="game-grid"></div>
-            <div class="button-group" style="margin-top: 20px;">
-                <p style="width:100%; text-align:center; color: #666; font-size: 0.9em;">Hier erscheinen Wörter, bei denen du Fehler gemacht hast.</p>
-            </div>
-        </div>
-
-        <div id="vocab" class="tab-content">
-            <div class="vocab-form">
-                <h2 style="margin-top: 0; font-size: 18px;">Neue Vokabel hinzufügen</h2>
-                <div class="form-group">
-                    <label for="russianInput">Russisches Wort:</label>
-                    <input type="text" id="russianInput" placeholder="z.B. Привет">
-                </div>
-                <div class="form-group">
-                    <label for="englishInput">Übersetzung (Deutsch/Englisch):</label>
-                    <input type="text" id="englishInput" placeholder="z.B. Hallo">
-                </div>
-                <div class="button-group">
-                    <button class="btn btn-primary" onclick="app.addVocabulary()">Hinzufügen</button>
-                    <button class="btn btn-secondary" onclick="app.clearForm()">Leeren</button>
-                </div>
-                <div id="message"></div>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 30px; margin-bottom: 10px;">
-                <h2 style="margin: 0; font-size: 18px;">Deine Liste (<span id="vocabCount">0</span>)</h2>
-                <button class="btn btn-danger" onclick="app.resetToDefaults()">Standard-Vokabeln laden</button>
-            </div>
-            
-            <div id="vocabList" class="vocab-list">
-                <p style="text-align: center; color: var(--color-text-secondary); padding: var(--space-20);">Lade...</p>
-            </div>
-        </div>
-
-        <div id="stats" class="tab-content">
-            <div class="stats">
-                <div class="stat-item">
-                    <div class="stat-value" id="totalVocab">0</div>
-        <div style="margin-top:30px;">
-            <h3>Fehler-Statistik</h3>
-            <div id="wordStats"></div>
-            <div style="margin-top:15px; text-align:center;">
-                <button class="btn btn-danger" onclick="app.resetWordStats()">Fehler zurücksetzen</button>
-                <div style="margin-top:10px;"><small><a href="#" onclick="app.forceResetVocab()" style="color:#999;">Notfall-Reset (Alles löschen)</a></small></div>
-            </div>
-        </div>
-                    <div class="stat-label">Vokabeln</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="gamesPlayed">0</div>
-                    <div class="stat-label">Runden gespielt</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="totalMatches">0</div>
-                    <div class="stat-label">Gefundene Paare</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="totalErrors">0</div>
-                    <div class="stat-label">Fehler</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="weakWordsCount">0</div>
-                    <div class="stat-label">Zu üben</div>
-                </div>
-            </div>
-            <div style="text-align: center; margin-top: 30px;">
-                 <button class="btn btn-secondary" onclick="app.exportData()">Daten speichern (Backup)</button>
-                 <button class="btn btn-danger" onclick="app.clearStats()">Statistik nullen</button>
-            </div>
-        
-        <div style="margin-top:20px;"><h3>Fehlerquote nach Wort</h3>
-        <div id="wordStats"></div>
-        <button class="btn btn-danger" style="margin-top:15px" onclick="app.resetWordStats()">Nur Fehler zurücksetzen</button></div></div>
+        <div id="gameBoard" class="game-grid"></div>
     </div>
-
-    <script>
-        class VocabularyApp {
-            constructor() {
-                this.vocabulary = this.gameDeck = [];
-        this.gameDeck = []; this.loadVocabulary();
-                this.currentGame = null;
-                this.selectedCards = [];
-                this.weakSelectedCards = [];
-                this.stats = this.loadStats();
-                this.init();
-            }
-
-            init() {
-                this.setupEventListeners();
-                this.updateUI();
-            }
-
-            setupEventListeners() {
-                document.querySelectorAll('.tab-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => this.switchTab(e.target.dataset.tab));
-                });
-            }
-
-            switchTab(tabName) {
-                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-                document.getElementById(tabName).classList.add('active');
-                document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-                
-                if (tabName === 'vocab') {
-                    this.updateVocabularyList();
-                } else if (tabName === 'stats') {
-                    this.updateStats();
-                } else if (tabName === 'weak') {
-                    this.startWeakWordsGame();
-                }
-            }
-
-            // --- DATA MANAGEMENT ---
-
-            getDefaultVocabulary() {
-                return [
-                    { russian: 'красивое', english: 'beautiful' },
-                    { russian: 'большое', english: 'big' },
-                    { russian: 'маленькое', english: 'small' },
-                    { russian: 'хорошее', english: 'good' },
-                    { russian: 'место', english: 'place' },
-                    { russian: 'правило', english: 'rule' },
-                    { russian: 'большую', english: 'big' },
-                    { russian: 'плохую', english: 'bad' },
-                    { russian: 'плохой', english: 'bad' },
-                    { russian: 'старший', english: 'older' },
-                    { russian: 'младший', english: 'younger' },
-                    { russian: 'старшая', english: 'older' },
-                    { russian: 'мысль', english: 'idea' },
-                    { russian: 'странный', english: 'strange' },
-                    { russian: 'умный', english: 'smart' },
-                    { russian: 'младшая', english: 'younger' },
-                    { russian: 'декабрь', english: 'December' },
-                    { russian: 'конец', english: 'end' },
-                    { russian: 'начало', english: 'beginning' },
-                    { russian: 'март', english: 'March' },
-                    { russian: 'просто', english: 'simply' },
-                    { russian: 'бросать', english: 'throw' },
-                    { russian: 'тренироваться', english: 'to train' },
-                    { russian: 'бежать', english: 'run' },
-                    { russian: 'ноябрь', english: 'November' },
-                    { russian: 'отпуск', english: 'vacation' },
-                    { russian: 'октябрь', english: 'October' },
-                    { russian: 'июль', english: 'July' },
-                    { russian: 'июнь', english: 'June' },
-                    { russian: 'сентябрь', english: 'September' },
-                    { russian: 'август', english: 'August' },
-                    { russian: 'четырнадцать', english: 'fourteen' },
-                    { russian: 'море', english: 'sea' },
-                    { russian: 'запад', english: 'west' },
-                    { russian: 'восток', english: 'east' },
-                    { russian: 'юг', english: 'south' },
-                    { russian: 'шумно', english: 'noisy' },
-                    { russian: 'солнце', english: 'sun' },
-                    { russian: 'тихо', english: 'quiet' },
-                    { russian: 'туман', english: 'fog' },
-                    { russian: 'новую', english: 'new' },
-                    { russian: 'хорошую', english: 'good' },
-                    { russian: 'длинную', english: 'long' },
-                    { russian: 'твою', english: 'your' },
-                    { russian: 'целый', english: 'whole' },
-                    { russian: 'длинный', english: 'long' },
-                    { russian: 'важный', english: 'important' },
-                    { russian: 'красивый', english: 'beautiful' },
-                    { russian: 'тринадцать', english: 'thirteen' },
-                    { russian: 'девятнадцать', english: 'nineteen' },
-                    { russian: 'восемнадцать', english: 'eighteen' },
-                    { russian: 'семнадцать', english: 'seventeen' },
-                    { russian: 'апрель', english: 'April' },
-                    { russian: 'май', english: 'May' },
-                    { russian: 'двенадцать', english: 'twelve' },
-                    { russian: 'было', english: 'was' },
-                    { russian: 'спорт', english: 'sport' },
-                    { russian: 'выиграть', english: 'to win' },
-                    { russian: 'проиграть', english: 'to lose' },
-                    { russian: 'форма', english: 'uniform' },
-                    { russian: 'хоккей', english: 'hockey' },
-                    { russian: 'надевать', english: 'to put on' },
-                    { russian: 'матч', english: 'match' },
-                    { russian: 'футболист', english: 'soccer player' },
-                    { russian: 'завтра', english: 'tomorrow' },
-                    { russian: 'будет', english: 'will be' },
-                    { russian: 'вчера', english: 'yesterday' },
-                    { russian: 'скоро', english: 'soon' },
-                    { russian: 'месяц', english: 'month' },
-                    { russian: 'февраль', english: 'February' },
-                    { russian: 'январь', english: 'January' },
-                    { russian: 'команда', english: 'team' },
-                    { russian: 'футбольный', english: 'soccer' },
-                    { russian: 'стадион', english: 'stadium' },
-                    { russian: 'игра', english: 'game' },
-                    { russian: 'баскетболист', english: 'basketball player' },
-                    { russian: 'звезда', english: 'star' },
-                    { russian: 'север', english: 'north' },
-                    { russian: 'прекрасный', english: 'beautiful' },
-                    { russian: 'сад', english: 'garden' },
-                    { russian: 'минус', english: 'minus' },
-                    { russian: 'плюс', english: 'plus' },
-                    { russian: 'туча', english: 'rain cloud' },
-                    { russian: 'градус', english: 'degrees' },
-                    { russian: 'ветер', english: 'wind' },
-                    { russian: 'температура', english: 'temperature' },
-                    { russian: 'сильный', english: 'strong' },
-                    { russian: 'небо', english: 'sky' },
-                    { russian: 'грязно', english: 'dirty' },
-                    { russian: 'зима', english: 'winter' },
-                    { russian: 'осень', english: 'fall' },
-                    { russian: 'лето', english: 'summer' },
-                    { russian: 'цветы', english: 'flowers' },
-                    { russian: 'весна', english: 'spring' },
-                    { russian: 'тепло', english: 'warm' },
-                    { russian: 'холодно', english: 'cold' },
-                    { russian: 'снег', english: 'snow' },
-                    { russian: 'идти', english: 'to go' },
-                    { russian: 'дождь', english: 'rain' },
-                    { russian: 'твой', english: 'your' },
-                    { russian: 'скажи', english: 'tell' },
-                    { russian: 'соседи', english: 'neighbors' },
-                    { russian: 'дорогой', english: 'dear' },
-                    { russian: 'бизнесмен', english: 'businessman' },
-                    { russian: 'сосед', english: 'neighbor' },
-                    { russian: 'учусь', english: 'learning' },
-                    { russian: 'работа', english: 'work' },
-                    { russian: 'старик', english: 'old man' },
-                    { russian: 'группа', english: 'group' },
-                    { russian: 'человека', english: 'person' },
-                    { russian: 'опыт', english: 'experience' },
-                    { russian: 'учится', english: 'study' },
-                    { russian: 'скажите', english: 'say' },
-                    { russian: 'бабушка', english: 'grandmother' },
-                    { russian: 'племянник', english: 'nephew' },
-                    { russian: 'дедушка', english: 'grandfather' },
-                    { russian: 'внучка', english: 'granddaughter' },
-                    { russian: 'подросток', english: 'teenager' },
-                    { russian: 'сыновья', english: 'sons' },
-                    { russian: 'своих', english: 'your' },
-                    { russian: 'родителей', english: 'parents' },
-                    { russian: 'будут', english: 'will be' },
-                    { russian: 'университет', english: 'university' },
-                    { russian: 'студентка', english: 'student' },
-                    { russian: 'студент', english: 'student' },
-                    { russian: 'имя', english: 'name' },
-                    { russian: 'вашего', english: 'your' },
-                    { russian: 'директора', english: 'director' },
-                    { russian: 'дочь', english: 'daughter' },
-                    { russian: 'свою', english: 'your, her, mine, their, his, our, my, its, yours' },
-                    { russian: 'мать', english: 'mother, mom' },
-                    { russian: 'отец', english: 'father, dad' },
-                    { russian: 'сын', english: 'son' },
-                    { russian: 'отца', english: 'father, father\'s' },
-                    { russian: 'матери', english: 'mother, mother\'s, mothers' },
-                    { russian: 'шестнадцать', english: 'sixteen' },
-                    { russian: 'тридцать', english: 'thirty' },
-                    { russian: 'пятнадцать', english: 'fifteen' },
-                    { russian: 'минут', english: 'minutes' },
-                    { russian: 'минута', english: 'a minute, minute, minutes' },
-                    { russian: 'одиннадцать', english: 'eleven' },
-                    { russian: 'сорок', english: 'forty' },
-                    { russian: 'двадцать', english: 'twenty' },
-                    { russian: 'девять', english: 'nine' },
-                    { russian: 'ему', english: 'him, for him, to him, is, he is, he\'ll, he, at him' },
-                    { russian: 'год', english: 'year, a year, for a year, years, years old,' },
-                    { russian: 'окно', english: 'window, the window, There is a window' },
-                    { russian: 'времени', english: 'time, of time' },
-                    { russian: 'были', english: 'have been, were, been, there were, was, had' },
-                    { russian: 'видел', english: 'saw, had seen, see, seen, have seen, seeing' },
-                    { russian: 'работала', english: 'work, was working, working, were working' },
-                    { russian: 'уходить', english: 'leaving, to leave' },
-                    { russian: 'пять', english: 'five' },
-                    { russian: 'девочек', english: 'girls\', girls, any girls, the girls\'' },
-                    { russian: 'кошек', english: 'of cats, cats, any cats, cats\'' },
-                    { russian: 'шесть', english: 'is six, six' },
-                    { russian: 'собак', english: 'dogs, of dogs, dogs\'' },
-                    { russian: 'время', english: 'some time, time, the time, leisure' },
-                    { russian: 'часов', english: 'am, pm, o\'clock, hours, watches, clock' },
-                    { russian: 'ей', english: 'she, her, to her, she\'s, it, for her' },
-                    { russian: 'мало', english: 'few, little, too small for, few (исчисляемые)' },
-                    { russian: 'одно', english: 'one, a, an' },
-                    { russian: 'тебе', english: 'you, did you, at you, for you, to you, you\'ll, your' },
-                    { russian: 'родитель', english: 'parent' },
-                    { russian: 'свой', english: 'own, our, its, of her own, your, her, theirs, their' },
-                    { russian: 'дочери', english: 'daughter, daughter (косв.п. ед.ч.), daughter is' },
-                    { russian: 'муж', english: 'husband, the husband, spouse, a husband' },
-                    { russian: 'жена', english: 'wife, the wife, spouse, a wife' },
-                    { russian: 'дядя', english: 'an uncle, uncle, the uncle' },
-                    { russian: 'прости', english: 'forgive, sorry' },
-                    { russian: 'твои', english: 'your, are your, do your, did your, yours, will your' },
-                    { russian: 'восемь', english: 'eight' },
-                    { russian: 'приходить', english: 'come, to come' },
-                    { russian: 'сколько', english: 'how many, how much, how long' },
-                    { russian: 'лет', english: 'years old, years' },
-                    { russian: 'семь', english: 'seven, 7' },
-                    { russian: 'десять', english: 'ten' },
-                    { russian: 'опаздывать', english: 'late, to be late, be late' },
-                    { russian: 'возможность', english: 'opportunity, possibility' },
-                    { russian: 'просить', english: 'ask' },
-                    { russian: 'туда', english: 'there, there (direction where to)' },
-                    { russian: 'отдыхает', english: 'is having a rest, is resting, rests, rest, resting' },
-                    { russian: 'иногда', english: 'sometimes, occasionally, Sometimes' },
-                    { russian: 'ходит', english: 'walk, walks, is walking, go, goes, comes, attend' },
-                    { russian: 'играть', english: 'playing, play, to play, seek' },
-                    { russian: 'никогда', english: 'ever, never' },
-                    { russian: 'днём', english: 'in the daytime, day, in the afternoon' },
-                    { russian: 'сплю', english: 'sleeping, sleep, day' },
-                    { russian: 'расти', english: 'grow, to increase, increase, to grow, growing' },
-                    { russian: 'журнал', english: 'a magazine, magazine, log' },
-                    { russian: 'отвечать', english: 'to answer, answering' },
-                    { russian: 'вместе', english: 'together, with' },
-                    { russian: 'смотреть', english: 'watching, look, watch, to watch, looking, see' },
-                    { russian: 'теннис', english: 'tennis' },
-                    { russian: 'мыть', english: 'to wash, wash, mop, do, washing, mopping' },
-                    { russian: 'футбол', english: 'soccer, football, is soccer' },
-                    { russian: 'скрипка', english: 'violin, a violin, fiddle, the violin' },
-                    { russian: 'баскетбол', english: 'basketball, basketball is' },
-                    { russian: 'снова', english: 'again' },
-                    { russian: 'пианино', english: 'piano, the piano' },
-                    { russian: 'газета', english: 'newspaper, a newspaper' },
-                    { russian: 'спрашивать', english: 'to ask, ask, asking, inquire' },
-                    { russian: 'открывать', english: 'open, opening, be opening, to discover, unlock' },
-                    { russian: 'ел', english: 'eat, had, have eaten, has eaten, eaten, ate' },
-                    { russian: 'весь', english: 'the whole, entire, whole, all' },
-                    { russian: 'помогать', english: 'help, to help' },
-                    { russian: 'терять', english: 'to lose' },
-                    { russian: 'вспоминать', english: 'remember, remembering, reminisce' },
-                    { russian: 'забывать', english: 'forget, to forget' },
-                    { russian: 'переводить', english: 'transfer, translate, translating' },
-                    { russian: 'танцевать', english: 'dance, dancing, to dance' },
-                    { russian: 'бежу', english: 'run, am running' },
-                    { russian: 'живу', english: 'live, am living' },
-                    { russian: 'говорю', english: 'say, speak, am speaking' },
-                    { russian: 'слушаю', english: 'listen, am listening' },
-                    { russian: 'кино', english: 'cinema, movie' },
-                    { russian: 'театр', english: 'theater, theatre' },
-                    { russian: 'музей', english: 'museum' },
-                    { russian: 'комната', english: 'room' },
-                    { russian: 'дом', english: 'house, home' },
-                    { russian: 'квартира', english: 'apartment, flat' },
-                    { russian: 'кухня', english: 'kitchen' },
-                    { russian: 'спальня', english: 'bedroom' },
-                    { russian: 'гостиная', english: 'living room' },
-                    { russian: 'ванная', english: 'bathroom, bathtub' },
-                    { russian: 'балкон', english: 'balcony' },
-                    { russian: 'крыша', english: 'roof' },
-                    { russian: 'лестница', english: 'stairs, staircase' },
-                    { russian: 'двери', english: 'doors' },
-                    { russian: 'дверь', english: 'door' },
-                    { russian: 'стол', english: 'table' },
-                    { russian: 'стул', english: 'chair' },
-                    { russian: 'кровать', english: 'bed' },
-                    { russian: 'диван', english: 'sofa, couch' },
-                    { russian: 'полка', english: 'shelf' },
-                    { russian: 'шкаф', english: 'wardrobe, cabinet' },
-                    { russian: 'картина', english: 'picture, painting' },
-                    { russian: 'зеркало', english: 'mirror' },
-                    { russian: 'лампа', english: 'lamp' },
-                    { russian: 'ковер', english: 'carpet, rug' },
-                    { russian: 'растение', english: 'plant' },
-                    { russian: 'цветок', english: 'flower' },
-                    { russian: 'книга', english: 'book' },
-                    { russian: 'журнал', english: 'magazine' },
-                    { russian: 'газета', english: 'newspaper' },
-                    { russian: 'рисунок', english: 'drawing, picture' },
-                    { russian: 'фотография', english: 'photograph, photo' },
-                    { russian: 'мобильный телефон', english: 'mobile phone, cell phone' },
-                    { russian: 'компьютер', english: 'computer' },
-                    { russian: 'телевизор', english: 'television, TV' },
-                    { russian: 'радио', english: 'radio' },
-                    { russian: 'кнопка', english: 'button' },
-                    { russian: 'часы', english: 'watch, clock' },
-                    { russian: 'вешалка', english: 'coat rack, hanger' },
-                    { russian: 'пультcontrol', english: 'remote control' },
-                    { russian: 'выключатель', english: 'light switch' },
-                    { russian: 'розетка', english: 'socket, outlet' },
-                    { russian: 'провод', english: 'wire, cord' },
-                    { russian: 'тарелка', english: 'plate, dish' },
-                    { russian: 'чашка', english: 'cup, mug' },
-                    { russian: 'стакан', english: 'glass' },
-                    { russian: 'ложка', english: 'spoon' },
-                    { russian: 'вилка', english: 'fork' },
-                    { russian: 'нож', english: 'knife' },
-                    { russian: 'кастрюля', english: 'pot, saucepan' },
-                    { russian: 'сковорода', english: 'frying pan, skillet' },
-                    { russian: 'печь', english: 'oven, stove' },
-                    { russian: 'холодильник', english: 'refrigerator, fridge' },
-                    { russian: 'стиральная машина', english: 'washing machine' },
-                    { russian: 'посудомоечная машина', english: 'dishwasher' },
-                    { russian: 'микроволновая печь', english: 'microwave' },
-                    { russian: 'хлеб', english: 'bread' },
-                    { russian: 'масло', english: 'butter, oil' },
-                    { russian: 'сыр', english: 'cheese' },
-                    { russian: 'яйцо', english: 'egg' },
-                    { russian: 'мясо', english: 'meat' },
-                    { russian: 'рыба', english: 'fish' },
-                    { russian: 'курица', english: 'chicken' },
-                    { russian: 'молоко', english: 'milk' },
-                    { russian: 'йогурт', english: 'yogurt' },
-                    { russian: 'мороженое', english: 'ice cream' },
-                    { russian: 'сахар', english: 'sugar' },
-                    { russian: 'соль', english: 'salt' },
-                    { russian: 'специя', english: 'spice' },
-                    { russian: 'перец', english: 'pepper' },
-                    { russian: 'картофель', english: 'potato' },
-                    { russian: 'морковь', english: 'carrot' },
-                    { russian: 'лук', english: 'onion' },
-                    { russian: 'чеснок', english: 'garlic' },
-                    { russian: 'помидор', english: 'tomato' },
-                    { russian: 'огурец', english: 'cucumber' },
-                    { russian: 'яблоко', english: 'apple' },
-                    { russian: 'апельсин', english: 'orange' },
-                    { russian: 'банан', english: 'banana' },
-                    { russian: 'лимон', english: 'lemon' },
-                    { russian: 'виноград', english: 'grapes' },
-                    { russian: 'клубника', english: 'strawberry' },
-                    { russian: 'черника', english: 'blueberry' },
-                    { russian: 'малина', english: 'raspberry' },
-                    { russian: 'кокос', english: 'coconut' },
-                    { russian: 'грецкий орех', english: 'walnut' },
-                    { russian: 'кофе', english: 'coffee' },
-                    { russian: 'чай', english: 'tea' },
-                    { russian: 'сок', english: 'juice' },
-                    { russian: 'вода', english: 'water' },
-                    { russian: 'вино', english: 'wine' },
-                    { russian: 'пиво', english: 'beer' },
-                    { russian: 'хотеть', english: 'want, to want' },
-                    { russian: 'нравиться', english: 'to like, to please' },
-                    { russian: 'давать', english: 'give, to give' },
-                    { russian: 'брать', english: 'take, to take' },
-                    { russian: 'делать', english: 'do, make, to do' },
-                    { russian: 'знать', english: 'know, to know' },
-                    { russian: 'понимать', english: 'understand, to understand' },
-                    { russian: 'видеть', english: 'see, to see' },
-                    { russian: 'слышать', english: 'hear, to hear' },
-                    { russian: 'верить', english: 'believe, to believe' },
-                    { russian: 'сомневаться', english: 'doubt, to doubt' },
-                    { russian: 'думать', english: 'think, to think' },
-                    { russian: 'мечтать', english: 'dream, to dream' },
-                    { russian: 'помнить', english: 'remember, to remember' },
-                    { russian: 'забыть', english: 'forget, to forget' },
-                    { russian: 'любить', english: 'love, to love' },
-                    { russian: 'ненавидеть', english: 'hate, to hate' },
-                    { russian: 'бояться', english: 'be afraid, to fear' },
-                    { russian: 'смеяться', english: 'laugh, to laugh' },
-                    { russian: 'плакать', english: 'cry, to cry' },
-                    { russian: 'улыбаться', english: 'smile, to smile' },
-                    { russian: 'кричать', english: 'shout, to shout' },
-                    { russian: 'шептать', english: 'whisper, to whisper' },
-                    { russian: 'петь', english: 'sing, to sing' },
-                    { russian: 'писать', english: 'write, to write' },
-                    { russian: 'читать', english: 'read, to read' },
-                    { russian: 'рисовать', english: 'draw, to draw, paint' },
-                    { russian: 'учить', english: 'teach, to teach' },
-                    { russian: 'учиться', english: 'study, learn, to study' },
-                    { russian: 'тренировать', english: 'train, to train' },
-                    { russian: 'начинать', english: 'begin, start, to begin' },
-                    { russian: 'кончать', english: 'finish, end, to end' },
-                    { russian: 'продолжать', english: 'continue, to continue' },
-                    { russian: 'переставать', english: 'stop, cease, to stop' },
-                    { russian: 'пытаться', english: 'try, attempt, to try' },
-                    { russian: 'выполнять', english: 'fulfill, carry out, to perform' }
-                ,
-                    { russian: 'находится', english: 'is, is situated, has been, located, is located' },
-                    { russian: 'украина', english: 'Ukraine' },
-                    { russian: 'около', english: 'near, around, for about, about, beside' },
-                    { russian: 'улице', english: 'the street, outside, street' },
-                    { russian: 'этой', english: 'this one, this, that, these, of this, the' },
-                    { russian: 'страна', english: 'country, a country' },
-                    { russian: 'об', english: 'about, of' },
-                    { russian: 'улица', english: 'the street, street, the street is' },
-                    { russian: 'хожу', english: 'walk, go, am walking' },
-                    { russian: 'ходить', english: 'go, to walk, walking, going, walk, to go' },
-                    { russian: 'отдыхать', english: 'relax, to rest, rest, relaxing, to relax' },
-                    { russian: 'нравится', english: 'like, enjoys, admire, likes, appreciates, love' },
-                    { russian: 'людей', english: 'people, of people, the people, people\'s' },
-                    { russian: 'люди', english: 'people, the people, men, humans, do people' },
-                    { russian: 'петербург', english: 'Petersburg, St. Petersburg' },
-                    { russian: 'тут', english: 'here' },
-                    { russian: 'говорю', english: 'speak, tell, telling, talk, saying, say, talking' },
-                    { russian: 'по-русски', english: 'in Russian, Russian' },
-                    { russian: 'говорит', english: 'has been talking, speaks, speak, tell, tells' },
-                    { russian: 'река', english: 'river, the river, a river' },
-                    { russian: 'большой', english: 'large, a large, a big, big, the big, great, the large' },
-                    { russian: 'гостиница', english: 'hotel, the hotel' },
-                    { russian: 'больше', english: 'bigger, is bigger, is greater than, greater than' },
-                    { russian: 'заказывать', english: 'order, ordering' },
-                    { russian: 'концерт', english: 'concert, the concert, does the concert' },
-                    { russian: 'спектакль', english: 'show, performance, play' },
-                    { russian: 'турист', english: 'tourist, a tourist' },
-                    { russian: 'классический', english: 'classical' },
-                    { russian: 'впереди', english: 'ahead, up ahead, ahead of, in the front' },
-                    { russian: 'экскурсия', english: 'the tour, tour, (guided) tour, touring' },
-                    { russian: 'выставка', english: 'show, exhibition, fair' },
-                    { russian: 'галерея', english: 'the gallery, gallery, a gallery' },
-                    { russian: 'совсем', english: 'entirely, at all, definitely, completely, really, lot' },
-                    { russian: 'по-немецки', english: 'German, in German' },
-                    { russian: 'по-английски', english: 'English, in English' },
-                    { russian: 'без', english: 'without, have no, no' },
-                    { russian: 'европе', english: 'Europe' },
-                    { russian: 'ехать', english: 'to go, go, to take, travel, drive, going' },
-                    { russian: 'европа', english: 'Europe' },
-                    { russian: 'цирк', english: 'circus, the circus' },
-                    { russian: 'главный', english: 'main, is the main, chief, the main, ultimate' },
-                    { russian: 'животное', english: 'animal, an animal, the animal' },
-                    { russian: 'зал', english: 'hall' },
-                    { russian: 'домашний', english: 'a pet, pet, homemade' },
-                    { russian: 'зоопарк', english: 'zoo, the zoo, a zoo' },
-                    { russian: 'лес', english: 'woods, the forest, forest, wood, the woods' },
-                    { russian: 'киоск', english: 'kiosk, the kiosk, stand, booth, a kiosk' },
-                    { russian: 'пол', english: 'floor, half, the floor' },
-                    { russian: 'мост', english: 'bridge, there is a bridge, the bridge' },
-                    { russian: 'обсуждать', english: 'discuss, to discuss' },
-                    { russian: 'опаздывать', english: 'late, to be late, be late' },
-                    { russian: 'возможность', english: 'opportunity, possibility' },
-                    { russian: 'просить', english: 'ask' },
-                    { russian: 'туда', english: 'there, there (direction where to)' },
-                    { russian: 'отдыхает', english: 'is having a rest, is resting, rests, rest, resting' },
-                    { russian: 'иногда', english: 'sometimes, occasionally, Sometimes' },
-                    { russian: 'ходит', english: 'walk, walks, is walking, go, goes, comes, attend' }];
-            }
-
-            loadVocabulary() {
-                try {
-                    const data = localStorage.getItem('vocabulary_v3');
-                    if (data) {
-                        return JSON.parse(data);
-                    }
-                } catch (e) { console.error(e); }
-                
-                // Fallback: Load defaults instantly if storage is empty
-                const defaults = this.getDefaultVocabulary().map(v => ({
-                    ...v, mistakes: 0, correct: 0
-                }));
-                this.saveVocabulary(defaults);
-                return defaults;
-            }
-
-            saveVocabulary(vocabToSave = null) {
-                if(vocabToSave) this.vocabulary = vocabToSave;
-                localStorage.setItem('vocabulary_v3', JSON.stringify(this.vocabulary));
-                this.updateCounts();
-            }
-            
-            resetToDefaults() {
-                if(confirm("Bist du sicher? Deine eigenen hinzugefügten Vokabeln werden gelöscht und durch die Standard-Liste (~300 Wörter) ersetzt.")) {
-                    const defaults = this.getDefaultVocabulary().map(v => ({
-                        ...v, mistakes: 0, correct: 0
-                    }));
-                    this.vocabulary = defaults;
-                    this.saveVocabulary();
-                    this.updateVocabularyList();
-                    this.startNewGame();
-                    alert("Alle Vokabeln geladen!");
-                }
-            }
-
-            loadStats() {
-                try {
-                    const data = localStorage.getItem('vocabStats_v3');
-                    return data ? JSON.parse(data) : { gamesPlayed: 0, totalMatches: 0, totalErrors: 0 };
-                } catch {
-                    return { gamesPlayed: 0, totalMatches: 0, totalErrors: 0 };
-                }
-            }
-
-            saveStats() {
-                localStorage.setItem('vocabStats_v3', JSON.stringify(this.stats));
-            }
-            
-            clearStats() {
-                if(confirm("Statistiken wirklich löschen?")) {
-                    this.stats = { gamesPlayed: 0, totalMatches: 0, totalErrors: 0 };
-                    this.vocabulary.forEach(v => { v.mistakes = 0; v.correct = 0; });
-                    this.saveVocabulary();
-                    this.saveStats();
-                    this.updateStats();
-                }
-            }
-
-            addVocabulary() {
-                const russian = document.getElementById('russianInput').value.trim();
-                const english = document.getElementById('englishInput').value.trim();
-                const messageDiv = document.getElementById('message');
-
-                if (!russian || !english) {
-                    this.showMessage('Bitte beide Felder ausfüllen', 'error', messageDiv);
-                    return;
-                }
-
-                this.vocabulary.push({ russian, english, mistakes: 0, correct: 0 });
-                this.saveVocabulary();
-                this.clearForm();
-                this.showMessage('Gespeichert! ✓', 'success', messageDiv);
-                this.updateVocabularyList();
-            }
-
-            deleteVocabulary(index) {
-                if(confirm("Wort wirklich löschen?")) {
-                    this.vocabulary.splice(index, 1);
-                    this.saveVocabulary();
-                    this.updateVocabularyList();
-                }
-            }
-
-            clearForm() {
-                document.getElementById('russianInput').value = '';
-                document.getElementById('englishInput').value = '';
-                document.getElementById('message').innerHTML = '';
-            }
-
-            showMessage(text, type, element) {
-                element.innerHTML = `<div class="message ${type}">${text}</div>`;
-                setTimeout(() => element.innerHTML = '', 3000);
-            }
-
-            updateUI() {
-                this.updateCounts();
-                this.startNewGame();
-            }
-
-            updateCounts() {
-                const count = this.vocabulary.length;
-                document.getElementById('vocabCount').textContent = count;
-                document.getElementById('totalVocab').textContent = count;
-            }
-
-            updateVocabularyList() {
-                const container = document.getElementById('vocabList');
-                if (this.vocabulary.length === 0) {
-                    container.innerHTML = '<p style="text-align: center; color: var(--color-text-secondary); padding: 20px;">Keine Vokabeln vorhanden.</p>';
-                    return;
-                }
-
-                container.innerHTML = this.vocabulary.map((vocab, index) => `
-                    <div class="vocab-item">
-                        <div class="vocab-words">
-                            <div class="vocab-russian">
-                                <button class="btn-speak" onclick="app.speak('${vocab.russian.replace(/'/g, "\\'")}', 'ru')" title="Anhören">🔊</button>
-                                ${this.escapeHtml(vocab.russian)}
-                            </div>
-                            <div class="vocab-english">${this.escapeHtml(vocab.english)}</div>
-                        </div>
-                        <button class="btn-delete" onclick="app.deleteVocabulary(${index})">X</button>
-                    </div>
-                `).join('');
-            }
-
-            updateStats() {
-                document.getElementById('gamesPlayed').textContent = this.stats.gamesPlayed;
-                document.getElementById('totalMatches').textContent = this.stats.totalMatches;
-                document.getElementById('totalErrors').textContent = this.stats.totalErrors || 0;
-                document.getElementById('weakWordsCount').textContent = this.vocabulary.filter(v => v.mistakes > 0).length;
-
-                const list = document.getElementById('wordStats');
-                if(list) {
-                    const err = this.vocabulary.filter(v => v.mistakes > 0).sort((a,b)=>b.mistakes-a.mistakes).slice(0,50);
-                    list.innerHTML = err.length ? err.map(v => `
-                        <div class="stat-item">
-                            <div style="display:flex;justify-content:space-between;">
-                                <span><b>${v.russian}</b></span>
-                                <span style="color:red">${v.mistakes}x</span>
-                            </div>
-                            <div style="font-size:12px;color:#666">${v.english}</div>
-                            <div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${Math.min(100,v.mistakes*10)}%"></div></div>
-                        </div>`).join('') : '<p>Keine Fehler.</p>';
-                }
-            }
-
-            // --- GAME LOGIC ---
-
-            startNewGame() {
-                this.startTimer();
-                if(!this.vocabulary || this.vocabulary.length < 5) this.gameDeck = []; this.loadVocabulary();
-                if(this.vocabulary.length < 2) return;
-
-                const totalTarget = 25;
-                const visibleLimit = 5;
-                const available = Math.min(totalTarget, this.vocabulary.length);
-
-                if(!this.gameDeck || this.gameDeck.length < available) {
-                    this.gameDeck = this.vocabulary.map((_,i)=>i).sort(()=>Math.random()-0.5);
-                }
-
-                const selectedIndices = this.gameDeck.splice(0, available);
-                const selectedWords = selectedIndices.map(i => this.vocabulary[i]);
-
-                const initial = selectedWords.slice(0, visibleLimit);
-                this.pairQueue = selectedWords.slice(visibleLimit);
-
-                this.setupGameGrid(initial, 'gameGrid', false);
-                this.stats.gamesPlayed++;
-                this.saveStats();
-            }
-
-            startWeakWordsGame() {
-                const weakWords = this.vocabulary.filter(v => v.mistakes > 0 && v.correct < 2);
-                if (weakWords.length === 0) {
-                    document.getElementById('weakGameGrid').innerHTML = '<div style="text-align:center; padding:40px;">🎉 Alles super! Keine schwachen Wörter momentan.</div>';
-                    return;
-                }
-                const selected = weakWords.sort(() => Math.random() - 0.5).slice(0, 10);
-                this.setupGameGrid(selected, 'weakGameGrid', true);
-            }
-
-            setupGameGrid(selectedPairs, elementId, isWeakMode) {
-                const cards = [];
-                selectedPairs.forEach((vocab, index) => {
-                    const realIndex = this.vocabulary.indexOf(vocab);
-                    cards.push({ id: `p${index}-ru`, text: vocab.russian, lang: 'ru', pairId: index, realIndex: realIndex });
-                    cards.push({ id: `p${index}-en`, text: vocab.english, lang: 'en', pairId: index, realIndex: realIndex });
-                });
-
-                const ruCards = cards.filter(c => c.lang === 'ru').sort(() => Math.random() - 0.5);
-                const enCards = cards.filter(c => c.lang === 'en').sort(() => Math.random() - 0.5);
-
-                const prevGame = isWeakMode ? this.weakGame : this.currentGame;
-                const prevCompleted = prevGame && prevGame.completed ? prevGame.completed : 0;
-
-                const gameObj = {
-                    pairs: selectedPairs, 
-                    cardsLeft: ruCards, 
-                    cardsRight: enCards, 
-                    allCards: [...ruCards, ...enCards], 
-                    matched: [],
-                    pairsCount: selectedPairs.length,
-                    totalPairs: selectedPairs.length + (this.pairQueue ? this.pairQueue.length : 0),
-                    completed: prevCompleted
-                };
-
-                if (isWeakMode) {
-                    this.weakGame = gameObj;
-                    this.weakSelectedCards = [];
-                } else {
-                    this.currentGame = gameObj;
-                    this.selectedCards = [];
-                }
-
-                this.renderGrid(elementId, isWeakMode);
-            }
-
-            renderGrid(elementId, isWeakMode) {
-                const game = isWeakMode ? this.weakGame : this.currentGame;
-                const selection = isWeakMode ? this.weakSelectedCards : this.selectedCards;
-                const grid = document.getElementById(elementId);
-                
-                const renderCard = (card) => {
-                    const isSelected = selection.some(s => s.id === card.id);
-                    const isMatched = game.matched.includes(card.id);
-                    
-                    return `
-                    <div class="word-card ${isMatched ? 'matched' : ''} ${isSelected ? 'selected' : ''}"
-                        onclick="app.handleCardClick('${card.id}', ${isWeakMode})"
-                    >
-                        <div class="${card.lang === 'ru' ? 'russian' : 'english'}">${this.escapeHtml(card.text)}</div>
-                        ${card.lang === 'ru' ? '<div class="speaker-icon">🔊</div>' : ''}
-                    </div>
-                    `;
-                };
-
-                const leftCol = game.cardsLeft.map(renderCard).join('');
-                const rightCol = game.cardsRight.map(renderCard).join('');
-
-                grid.innerHTML = `
-                    <div class="game-grid-column">${leftCol}</div>
-                    <div class="game-grid-column">${rightCol}</div>
-                `;
-
-                const countElem = isWeakMode ? 'weakMatchedCount' : 'matchedCount';
-                const totalElem = isWeakMode ? 'weakTotalPairs' : 'totalPairs';
-                document.getElementById(countElem).textContent = game.matched.length / 2;
-                document.getElementById(totalElem).textContent = game.totalPairs;
-            }
-
-            handleCardClick(cardId, isWeakMode) {
-                const game = isWeakMode ? this.weakGame : this.currentGame;
-                let selection = isWeakMode ? this.weakSelectedCards : this.selectedCards;
-
-                const card = game.allCards.find(c => c.id === cardId);
-                if (!card || game.matched.includes(card.id)) return;
-
-                if (card.lang === 'ru') {
-                    this.speak(card.text, 'ru');
-                }
-
-                if (selection.some(s => s.id === cardId)) return;
-
-                selection.push(card);
-
-                if (isWeakMode) this.weakSelectedCards = selection;
-                else this.selectedCards = selection;
-
-                this.renderGrid(isWeakMode ? 'weakGameGrid' : 'gameGrid', isWeakMode);
-
-                if (selection.length === 2) {
-                    const [c1, c2] = selection;
-
-                    const gridId = isWeakMode ? 'weakGameGrid' : 'gameGrid';
-                    document.getElementById(gridId).style.pointerEvents = 'none';
-
-                    if (c1.pairId === c2.pairId) {
-                        setTimeout(() => {
-                            game.matched.push(c1.id, c2.id);
-                            this.updateWordStats(c1.realIndex, true);
-                            game.completed++;
-
-                            const totalCurrentPairs = game.pairs.length;
-                            const matchedPairs = game.matched.length / 2;
-
-                            if (matchedPairs >= totalCurrentPairs) {
-                                if (this.pairQueue && this.pairQueue.length > 0) {
-                                    const nextBatchSize = Math.min(5, this.pairQueue.length);
-                                    const nextBatch = this.pairQueue.splice(0, nextBatchSize);
-
-                                    setTimeout(() => {
-                                        this.setupGameGrid(nextBatch, 'gameGrid', false);
-                                        document.getElementById(gridId).style.pointerEvents = 'auto';
-                                    }, 500);
-                                    return;
-                                } else {
-                                    this.stopTimer();
-                                    this.stats.totalMatches += game.completed;
-                                    this.saveStats();
-                                    setTimeout(() => {
-                                        alert(`🎉 Glückwunsch! Du hast alle ${game.completed} Paare gefunden!`);
-                                    }, 300);
-                                    return;
-                                }
-                            }
-
-                            this.finishTurn(isWeakMode);
-
-                            const cEl = document.getElementById(isWeakMode ? 'weakMatchedCount' : 'matchedCount');
-                            const tEl = document.getElementById(isWeakMode ? 'weakTotalPairs' : 'totalPairs');
-                            if(cEl) cEl.textContent = game.completed;
-                            if(tEl) tEl.textContent = game.totalPairs;
-                        }, 150);
-                    } else {
-                        setTimeout(() => {
-                            document.querySelectorAll(`#${gridId} .selected`).forEach(el => el.classList.add('error'));
-                            this.stats.totalErrors++;
-                            this.updateWordStats(c1.realIndex, false);
-                            this.updateWordStats(c2.realIndex, false);
-                            this.saveStats();
-
-                            setTimeout(() => {
-                                this.finishTurn(isWeakMode);
-                            }, 800);
-                        }, 400);
-                    }
-                }
-            }
-
-            finishTurn(isWeakMode) {
-                if (isWeakMode) this.weakSelectedCards = [];
-                else this.selectedCards = [];
-                
-                const gridId = isWeakMode ? 'weakGameGrid' : 'gameGrid';
-                document.getElementById(gridId).style.pointerEvents = 'auto';
-                this.renderGrid(gridId, isWeakMode);
-            }
-
-            updateWordStats(index, isCorrect) {
-                if (index === undefined || index < 0) return;
-                if (isCorrect) {
-                    this.vocabulary[index].correct++;
-                    if (this.vocabulary[index].correct >= 2) this.vocabulary[index].mistakes = 0; 
-                } else {
-                    this.vocabulary[index].mistakes++;
-                }
-                this.saveVocabulary();
-            }
-
-            speak(text, lang) {
-                if (!window.speechSynthesis) {
-                    console.warn('Speech Synthesis nicht verfügbar');
-                    return;
-                }
-
-                window.speechSynthesis.cancel();
-
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.rate = 0.85;
-                utterance.volume = 1.0;
-
-                const speakWithVoice = () => {
-                    const voices = window.speechSynthesis.getVoices();
-
-                    if (lang === 'ru') {
-                        let ruVoice = voices.find(v => v.name.includes('Irina'));
-                        if (!ruVoice) ruVoice = voices.find(v => v.lang === 'ru-RU');
-                        if (!ruVoice) ruVoice = voices.find(v => v.lang.startsWith('ru'));
-
-                        if (ruVoice) {
-                            utterance.voice = ruVoice;
-                            console.log('✓ Russische Stimme:', ruVoice.name);
-                        } else {
-                            console.warn('⚠ Keine russische Stimme');
-                            const defaultVoice = voices.find(v => v.default) || voices[0];
-                            if (defaultVoice) {
-                                utterance.voice = defaultVoice;
-                            }
-                        }
-                        utterance.lang = 'ru-RU';
-                    } else {
-                        utterance.lang = 'de-DE';
-                    }
-
-                    utterance.onerror = (event) => {
-                        console.error('❌ Fehler:', event.error);
-                    };
-
-                    console.log('🔊', text);
-                    window.speechSynthesis.speak(utterance);
-                };
-
-                const voices = window.speechSynthesis.getVoices();
-                if (voices.length > 0) {
-                    speakWithVoice();
-                } else {
-                    setTimeout(speakWithVoice, 100);
-                }
-            }
-
-            escapeHtml(text) {
-                if(!text) return '';
-                return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-            }
-            
-            exportData() {
-                const data = { vocab: this.vocabulary, stats: this.stats };
-                const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'russisch-trainer-backup.json';
-                a.click();
-            }
+    <div id="tab-weak" class="tab-content">
+        <div class="game-header">
+            <div><strong>Fehler üben</strong><br><span style="color:#8E8E93" id="weakCountDisplay">0 Wörter</span></div>
+            <button class="btn" id="btnStartWeak" onclick="app.startNewGame('weak')">Starten ▶</button>
+        </div>
+        <div id="weakBoard" class="game-grid" style="border: 2px dashed #ddd; border-radius: 16px; display:flex; justify-content:center; align-items:center; color:#999">
+            Hier erscheinen deine Übungen.
+        </div>
+    </div>
+    <div id="tab-manage" class="tab-content">
+        <input type="text" id="searchInput" placeholder="Suchen..." style="width:100%; padding:12px; border:none; background:#e3e3e8; border-radius:10px; margin-bottom:15px" onkeyup="app.renderVocabList()">
+        <div class="vocab-list" id="vocabListContainer"></div>
+    </div>
+    <div id="tab-stats" class="tab-content">
+        <div class="stats-grid">
+            <div class="stat-card"><span class="stat-num" style="color:var(--primary)" id="statTotalWords">0</span><span style="font-size:13px;color:#8E8E93">GESAMT</span></div>
+            <div class="stat-card"><span class="stat-num" style="color:var(--success)" id="statPairsFound">0</span><span style="font-size:13px;color:#8E8E93">GELÖST</span></div>
+            <div class="stat-card"><span class="stat-num" id="statRounds">0</span><span style="font-size:13px;color:#8E8E93">RUNDEN</span></div>
+            <div class="stat-card"><span class="stat-num" style="color:var(--danger)" id="statErrors">0</span><span style="font-size:13px;color:#8E8E93">FEHLER</span></div>
+        </div>
+        <div style="margin-top:auto; gap:10px; display:flex; flex-direction:column; padding-top:20px">
+            <button class="btn" style="background:#8E8E93" onclick="app.resetStats()">Statistik Reset</button>
+            <button class="btn" style="background:var(--danger)" onclick="app.hardReset()">Alles Löschen</button>
+        </div>
+    </div>
+</div>
+<script>
+const RAW_VOCAB = [
+["красивое","beautiful"],["большое","big"],["маленькое","small"],["хорошее","good"],["место","place"],
+["правило","rule"],["большую","big"],["плохую","bad"],["плохой","bad"],["старший","older"],
+["младший","younger"],["старшая","older"],["мысль","idea"],["странный","strange"],["умный","smart"],
+["младшая","younger"],["декабрь","December"],["конец","end"],["начало","beginning"],["март","March"],
+["просто","simply"],["бросать","throw"],["тренироваться","to train"],["бежать","run"],["ноябрь","November"],
+["отпуск","vacation"],["октябрь","October"],["июль","July"],["июнь","June"],["сентябрь","September"],
+["август","August"],["четырнадцать","fourteen"],["море","sea"],["запад","west"],["восток","east"],
+["юг","south"],["шумно","noisy"],["солнце","sun"],["тихо","quiet"],["туман","fog"],
+["новую","new"],["хорошую","good"],["длинную","long"],["твою","your"],["целый","whole"],
+["длинный","long"],["важный","important"],["красивый","beautiful"],["тринадцать","thirteen"],["девятнадцать","nineteen"],
+["восемнадцать","eighteen"],["семнадцать","seventeen"],["апрель","April"],["май","May"],["двенадцать","twelve"],
+["было","was"],["спорт","sport"],["выиграть","to win"],["проиграть","to lose"],["форма","uniform"],
+["хоккей","hockey"],["надевать","to put on"],["матч","match"],["футболист","soccer player"],["завтра","tomorrow"],
+["будет","will be"],["вчера","yesterday"],["скоро","soon"],["месяц","month"],["февраль","February"],
+["январь","January"],["команда","team"],["футбольный","soccer"],["стадион","stadium"],["игра","game"],
+["баскетболист","basketball player"],["звезда","star"],["север","north"],["прекрасный","beautiful"],["сад","garden"],
+["минус","minus"],["плюс","plus"],["туча","rain cloud"],["градус","degrees"],["ветер","wind"],
+["температура","temperature"],["сильный","strong"],["небо","sky"],["грязно","dirty"],["зима","winter"],
+["осень","fall"],["лето","summer"],["цветы","flowers"],["весна","spring"],["тепло","warm"],
+["холодно","cold"],["снег","snow"],["идти","to go"],["дождь","rain"],["твой","your"],
+["скажи","tell"],["соседи","neighbors"],["дорогой","dear"],["бизнесмен","businessman"],["сосед","neighbor"],
+["учусь","learning"],["работа","work"],["старик","old man"],["группа","group"],["человека","person"],
+["опыт","experience"],["учится","study"],["скажите","say"],["бабушка","grandmother"],["племянник","nephew"],
+["дедушка","grandfather"],["внучка","granddaughter"],["подросток","teenager"],["сыновья","sons"],["своих","your"],
+["родителей","parents"],["будут","will be"],["университет","university"],["студентка","student"],["студент","student"],
+["имя","name"],["вашего","your"],["директора","director"],["дочь","daughter"],["свою","your, her, mine"],
+["мать","mother"],["отец","father"],["сын","son"],["отца","father's"],["матери","mother's"],
+["шестнадцать","sixteen"],["тридцать","thirty"],["пятнадцать","fifteen"],["минут","minutes"],["минута","minute"],
+["одиннадцать","eleven"],["сорок","forty"],["двадцать","twenty"],["девять","nine"],["ему","him"],
+["год","year"],["окно","window"],["времени","time"],["были","were"],["видел","saw"],
+["работала","worked"],["уходить","leave"],["пять","five"],["девочек","girls"],["кошек","cats"],
+["шесть","six"],["собак","dogs"],["время","time"],["часов","hours"],["ей","her"],
+["мало","few"],["одно","one"],["тебе","you"],["родитель","parent"],["свой","own"],
+["дочери","daughter"],["муж","husband"],["жена","wife"],["дядя","uncle"],["прости","sorry"],
+["твои","your"],["восемь","eight"],["приходить","come"],["сколько","how many"],["лет","years"],
+["семь","seven"],["десять","ten"],["опаздывать","be late"],["возможность","opportunity"],["просить","ask"],
+["туда","there"],["отдыхает","rests"],["иногда","sometimes"],["ходит","walks"],["играть","play"],
+["никогда","never"],["днём","daytime"],["сплю","sleep"],["расти","grow"],["журнал","magazine"],
+["отвечать","answer"],["вместе","together"],["смотреть","watch"],["теннис","tennis"],["мыть","wash"],
+["футбол","soccer"],["скрипка","violin"],["баскетбол","basketball"],["снова","again"],["пианино","piano"],
+["газета","newspaper"],["спрашивать","ask"],["открывать","open"],["ел","ate"],["весь","whole"],
+["помогать","help"],["терять","lose"],["вспоминать","remember"],["забывать","forget"],["переводить","translate"],
+["танцевать","dance"],["бежу","run"],["живу","live"],["говорю","speak"],["слушаю","listen"],
+["кино","cinema"],["театр","theater"],["музей","museum"],["комната","room"],["дом","house"],
+["квартира","apartment"],["кухня","kitchen"],["спальня","bedroom"],["гостиная","living room"],["ванная","bathroom"],
+["балкон","balcony"],["крыша","roof"],["лестница","stairs"],["двери","doors"],["дверь","door"],
+["стол","table"],["стул","chair"],["кровать","bed"],["диван","sofa"],["полка","shelf"],
+["шкаф","wardrobe"],["картина","picture"],["зеркало","mirror"],["лампа","lamp"],["ковер","carpet"],
+["растение","plant"],["цветок","flower"],["книга","book"],["рисунок","drawing"],["фотография","photo"],
+["мобильный телефон","mobile phone"],["компьютер","computer"],["телевизор","TV"],["радио","radio"],["кнопка","button"],
+["часы","watch"],["вешалка","hanger"],["пульт","remote"],["выключатель","switch"],["розетка","socket"],
+["провод","wire"],["тарелка","plate"],["чашка","cup"],["стакан","glass"],["ложка","spoon"],
+["вилка","fork"],["нож","knife"],["кастрюля","pot"],["сковорода","pan"],["печь","stove"],
+["холодильник","fridge"],["стиральная машина","washing machine"],["посудомоечная машина","dishwasher"],["микроволновая печь","microwave"],["хлеб","bread"],
+["масло","butter"],["сыр","cheese"],["яйцо","egg"],["мясо","meat"],["рыба","fish"],
+["курица","chicken"],["молоко","milk"],["йогурт","yogurt"],["мороженое","ice cream"],["сахар","sugar"],
+["соль","salt"],["специя","spice"],["перец","pepper"],["картофель","potato"],["морковь","carrot"],
+["лук","onion"],["чеснок","garlic"],["помидор","tomato"],["огурец","cucumber"],["яблоко","apple"],
+["апельсин","orange"],["банан","banana"],["лимон","lemon"],["виноград","grapes"],["клубника","strawberry"],
+["черника","blueberry"],["малина","raspberry"],["кокос","coconut"],["грецкий орех","walnut"],["кофе","coffee"],
+["чай","tea"],["сок","juice"],["вода","water"],["вино","wine"],["пиво","beer"],
+["хотеть","want"],["нравиться","like"],["давать","give"],["брать","take"],["делать","do"],
+["знать","know"],["понимать","understand"],["видеть","see"],["слышать","hear"],["верить","believe"],
+["сомневаться","doubt"],["думать","think"],["мечтать","dream"],["помнить","remember"],["забыть","forget"],
+["любить","love"],["ненавидеть","hate"],["бояться","fear"],["смеяться","laugh"],["плакать","cry"],
+["улыбаться","smile"],["кричать","shout"],["шептать","whisper"],["петь","sing"],["писать","write"],
+["читать","read"],["рисовать","draw"],["учить","teach"],["учиться","study"],["тренировать","train"],
+["начинать","begin"],["кончать","finish"],["продолжать","continue"],["переставать","stop"],["пытаться","try"],
+["выполнять","perform"],["находится","located"],["украина","Ukraine"],["около","near"],["улице","street"],
+["этой","this"],["страна","country"],["об","about"],["улица","street"],["хожу","walk"],
+["ходить","walk"],["отдыхать","relax"],["нравится","likes"],["людей","people"],["люди","people"],
+["петербург","Petersburg"],["тут","here"],["по-русски","Russian"],["говорит","speaks"],["река","river"],
+["большой","big"],["гостиница","hotel"],["больше","bigger"],["заказывать","order"],["концерт","concert"],
+["спектакль","show"],["турист","tourist"],["классический","classical"],["впереди","ahead"],["экскурсия","tour"],
+["выставка","exhibition"],["галерея","gallery"],["совсем","completely"],["по-немецки","German"],["по-английски","English"],
+["без","without"],["европе","Europe"],["ехать","go"],["европа","Europe"],["цирк","circus"],
+["главный","main"],["животное","animal"],["зал","hall"],["домашний","home/pet"],["зоопарк","zoo"],
+["лес","forest"],["киоск","kiosk"],["пол","floor"],["мост","bridge"],["обсуждать","discuss"]
+];
+
+const app = {
+    data: { vocab: [], stats: { rounds: 0, pairsFound: 0, totalErrors: 0 } },
+    state: { cards: [], selected: null, locked: false, matches: 0, totalPairs: 0, mode: 'normal' },
+
+    init() {
+        const stored = localStorage.getItem('ru_trainer_column_v3');
+        if (stored) this.data = JSON.parse(stored);
+        else this.data.vocab = RAW_VOCAB.map(p => ({ russian: p[0], english: p[1], errors: 0 }));
+        this.updateUI();
+        this.startNewGame('normal');
+    },
+    save() { localStorage.setItem('ru_trainer_column_v3', JSON.stringify(this.data)); this.updateUI(); },
+    
+    switchTab(id) {
+        document.querySelectorAll('.tab-btn, .tab-content').forEach(e => e.classList.remove('active'));
+        document.querySelectorAll('.tab-btn')[['game','weak','manage','stats'].indexOf(id)].classList.add('active');
+        document.getElementById('tab-'+id).classList.add('active');
+    },
+
+    startNewGame(mode) {
+        this.state.mode = mode; 
+        this.state.matches = 0; 
+        this.state.selected = null; 
+        this.state.locked = false;
         
-            // --- NEW METHODS START ---
-            startTimer() {
-                this.stopTimer(); 
-                this.startTime = Date.now();
-                const el = document.getElementById('timer');
-                if(el) el.textContent = '00:00';
-                this.timerInterval = setInterval(() => {
-                    const s = Math.floor((Date.now() - this.startTime) / 1000);
-                    if(el) el.textContent = `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
-                }, 100);
-            }
+        let pool = (mode === 'weak') ? this.data.vocab.filter(v => v.errors > 0) : [...this.data.vocab];
+        if (pool.length === 0) return mode === 'weak' ? alert("Keine Fehler!") : null;
+        
+        // Shuffle & Pick 5 pairs
+        pool.sort(() => Math.random() - 0.5);
+        const selection = pool.slice(0, 5);
+        this.state.totalPairs = selection.length;
 
-            stopTimer() { 
-                if(this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; } 
-            }
+        // WICHTIG: Russisch und Englisch separat shufflen für Spalten-Layout
+        let russianCards = selection.map(w => ({ id: w.russian, text: w.russian, type: 'ru', ref: w }));
+        let englishCards = selection.map(w => ({ id: w.russian, text: w.english, type: 'en', ref: w }));
+        
+        // Jede Spalte für sich mischen
+        russianCards.sort(() => Math.random() - 0.5);
+        englishCards.sort(() => Math.random() - 0.5);
+        
+        // Im Grid: Zeile 1 links Russisch, rechts Englisch, etc.
+        this.state.cards = [];
+        for(let i = 0; i < 5; i++) {
+            this.state.cards.push(russianCards[i]);  // Links
+            this.state.cards.push(englishCards[i]);  // Rechts
+        }
+        
+        const board = document.getElementById(mode === 'weak' ? 'weakBoard' : 'gameBoard');
+        if(mode === 'weak') board.style.display = 'grid';
+        this.renderBoard(board);
+        document.getElementById('gameProgress').textContent = `0 / ${this.state.totalPairs} Paare`;
+        if(mode === 'normal') this.data.stats.rounds++;
+        this.save();
+    },
 
-            resetWordStats() {
-                if(confirm('Möchtest du nur die Fehlerzähler zurücksetzen?')) {
-                    this.vocabulary.forEach(v => { v.mistakes = 0; v.correct = 0; });
-                    this.saveVocabulary();
-                    this.updateStats();
-                    alert('Erledigt.');
-                }
-            }
-
-            forceResetVocab() {
-                if(confirm('Achtung: Dies setzt alle Vokabeln auf den Standard zurück.')) {
-                    localStorage.removeItem('vocabulary_v3');
-                    location.reload();
-                }
-            }
-            // --- NEW METHODS END ---
-
-            startTimer() {
-                this.stopTimer(); this.startTime = Date.now();
-                const el = document.getElementById('timer');
-                if(el) el.textContent = '00:00';
-                this.timerInterval = setInterval(() => {
-                    const s = Math.floor((Date.now() - this.startTime)/1000);
-                    if(el) el.textContent = `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
-                }, 100);
-            }
-            stopTimer() { if(this.timerInterval) clearInterval(this.timerInterval); }
-
-            resetWordStats() {
-                if(confirm('Fehlerzähler löschen?')) {
-                    this.vocabulary.forEach(v => {v.mistakes=0; v.correct=0;});
-                    this.saveVocabulary(); this.updateStats();
-                }
-            }
-            forceResetVocab() {
-                if(confirm('Alles löschen und neu laden?')) {
-                    localStorage.removeItem('vocabulary_v3');
-                    location.reload();
-                }
-            }
-}
-
-        const app = new VocabularyApp();
-
-        // Stimmen-Check
-        if (window.speechSynthesis) {
-            window.speechSynthesis.getVoices();
-
-            const checkVoices = () => {
-                const voices = window.speechSynthesis.getVoices();
-                console.log('🔊 Stimmen:', voices.length);
-
-                const ruVoices = voices.filter(v => 
-                    v.lang.startsWith('ru') || v.name.includes('Irina')
-                );
-
-                if (ruVoices.length > 0) {
-                    console.log('✅ Russische Stimme gefunden:', ruVoices[0].name);
-                } else {
-                    console.warn('⚠ Keine russische Stimme installiert');
-                    console.warn('iOS: Einstellungen → Bedienungshilfen → Gesprochene Inhalte → Stimmen');
-                    console.warn('Windows: Einstellungen → Sprache → Russisch → Sprachoptionen');
+    renderBoard(container) {
+        container.innerHTML = '';
+        this.state.cards.forEach((c, i) => {
+            const el = document.createElement('div');
+            el.className = 'card';
+            el.style.animation = `fadeIn 0.3s ease backwards ${i * 0.05}s`;
+            el.innerHTML = `<div class="card-text">${c.text}</div>` + 
+                (c.type === 'ru' ? `<svg class="speaker-icon" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>` : '');
+            el.onclick = () => {
+                if(c.type === 'ru') { window.speechSynthesis.cancel(); let u = new SpeechSynthesisUtterance(c.text); u.lang='ru-RU'; window.speechSynthesis.speak(u); }
+                if(!this.state.locked && !el.classList.contains('matched') && this.state.selected?.el !== el) {
+                    el.classList.add('selected');
+                    if(!this.state.selected) this.state.selected = { el, data: c };
+                    else this.checkMatch(this.state.selected, { el, data: c });
                 }
             };
+            container.appendChild(el);
+        });
+    },
 
-            if (window.speechSynthesis.getVoices().length > 0) {
-                checkVoices();
-            }
-            window.speechSynthesis.addEventListener('voiceschanged', checkVoices);
+    checkMatch(c1, c2) {
+        this.state.locked = true;
+        if (c1.data.id === c2.data.id) {
+            setTimeout(() => {
+                c1.el.classList.replace('selected','matched'); c2.el.classList.replace('selected','matched');
+                this.state.matches++; this.data.stats.pairsFound++; 
+                document.getElementById('gameProgress').textContent = `${this.state.matches} / ${this.state.totalPairs} Paare`;
+                this.state.selected = null; this.state.locked = false; this.save();
+                if(this.state.matches === this.state.totalPairs) setTimeout(() => {
+                    if(confirm("Runde fertig! Weiter?")) this.startNewGame(this.state.mode);
+                }, 300);
+            }, 300);
+        } else {
+            c1.el.classList.add('error'); c2.el.classList.add('error');
+            this.data.vocab.find(v => v.russian === c1.data.ref.russian).errors++;
+            this.data.stats.totalErrors++; this.save();
+            setTimeout(() => {
+                c1.el.classList.remove('selected','error'); c2.el.classList.remove('selected','error');
+                this.state.selected = null; this.state.locked = false;
+            }, 800);
         }
-    </script>
+    },
+
+    updateUI() {
+        document.getElementById('statTotalWords').textContent = this.data.vocab.length;
+        document.getElementById('statRounds').textContent = this.data.stats.rounds;
+        document.getElementById('statPairsFound').textContent = this.data.stats.pairsFound;
+        document.getElementById('statErrors').textContent = this.data.stats.totalErrors;
+        const weakCount = this.data.vocab.filter(v => v.errors > 0).length;
+        document.getElementById('weakCountDisplay').textContent = `${weakCount} Wörter`;
+        document.getElementById('btnStartWeak').style.opacity = weakCount ? 1 : 0.5;
+    },
+
+    renderVocabList() {
+        const q = document.getElementById('searchInput').value.toLowerCase();
+        const list = document.getElementById('vocabListContainer'); list.innerHTML = '';
+        this.data.vocab.filter(v => v.russian.toLowerCase().includes(q) || v.english.toLowerCase().includes(q))
+            .slice(0, 50).forEach(v => {
+                const d = document.createElement('div'); d.className = 'vocab-item';
+                d.innerHTML = `<div><strong>${v.russian}</strong><br><small>${v.english}</small></div>` +
+                    (v.errors ? `<div style="background:var(--danger);color:#fff;padding:2px 8px;border-radius:8px;font-size:12px">${v.errors}</div>` : '');
+                list.appendChild(d);
+            });
+    },
+    resetStats() { if(confirm('Reset Stats?')) { this.data.stats={rounds:0,pairsFound:0,totalErrors:0}; this.data.vocab.forEach(v=>v.errors=0); this.save(); } },
+    hardReset() { if(confirm('Alles Löschen?')) { localStorage.removeItem('ru_trainer_column_v3'); location.reload(); } }
+};
+document.addEventListener('DOMContentLoaded', () => app.init());
+</script>
 </body>
 </html>
