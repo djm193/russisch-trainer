@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Russisch Smart Trainer (Safe)</title>
+    <title>Russisch Trainer V13 (Hardened)</title>
     <style>
         :root {
             --primary: #007AFF; --bg: #F2F2F7; --card: #FFF; --text: #000; --sub: #8E8E93;
@@ -21,8 +21,9 @@
             height: 50px; display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);
             position: sticky; top: 0; z-index: 100; padding-top: env(safe-area-inset-top);
         }
-        .tab-btn { flex: 1; border: none; background: transparent; font-size: 15px; font-weight: 600; color: var(--sub); cursor: pointer; }
+        .tab-btn { flex: 1; border: none; background: transparent; font-size: 15px; font-weight: 600; color: var(--sub); cursor: pointer; position: relative; }
         .tab-btn.active { color: var(--primary); }
+        .badge { position: absolute; top: 8px; right: 8px; background: var(--danger); color: white; border-radius: 10px; padding: 2px 6px; font-size: 10px; font-weight: 700; }
         .content-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
         .tab-content { display: none; height: 100%; flex-direction: column; padding: 16px; overflow-y: auto; }
         .tab-content.active { display: flex; }
@@ -57,6 +58,14 @@
         .stat-card { background: white; padding: 20px; border-radius: var(--radius); text-align: center; box-shadow: var(--shadow); }
         .stat-num { font-size: 28px; font-weight: 700; display: block; }
         
+        /* Feedback Toast */
+        #toast {
+            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); color: white; padding: 8px 16px; border-radius: 20px;
+            font-size: 14px; pointer-events: none; opacity: 0; transition: opacity 0.3s; z-index: 999;
+        }
+        #toast.show { opacity: 1; }
+
         @keyframes shake { 0%,100% {transform:translateX(0)} 25% {transform:translateX(-5px)} 75% {transform:translateX(5px)} }
         @keyframes fadeIn { from {opacity:0;transform:scale(0.9)} to {opacity:1;transform:scale(1)} }
     </style>
@@ -64,12 +73,11 @@
 <body>
 <nav class="nav-tabs">
     <button class="tab-btn active" onclick="app.switchTab('game')">Spiel</button>
-    <button class="tab-btn" onclick="app.switchTab('weak')">Training</button>
+    <button class="tab-btn" onclick="app.switchTab('weak')">Training<span id="weakBadge" class="badge" style="display:none">0</span></button>
     <button class="tab-btn" onclick="app.switchTab('manage')">Liste</button>
     <button class="tab-btn" onclick="app.switchTab('stats')">Profil</button>
 </nav>
 <div class="content-area">
-    <!-- GAME TAB -->
     <div id="tab-game" class="tab-content active">
         <div class="game-header">
             <div style="color:#8E8E93; font-weight:500" id="gameProgress">0 / 5 Paare</div>
@@ -78,7 +86,6 @@
         <div id="gameBoard" class="game-grid"></div>
     </div>
 
-    <!-- WEAK TAB -->
     <div id="tab-weak" class="tab-content">
         <div class="game-header">
             <div><strong>Fehler üben</strong><br><span style="color:#8E8E93" id="weakCountDisplay">0 Wörter</span></div>
@@ -89,7 +96,6 @@
         </div>
     </div>
 
-    <!-- LIST TAB -->
     <div id="tab-manage" class="tab-content">
         <div style="display:flex; gap:10px; margin-bottom:15px">
              <input type="text" id="searchInput" placeholder="Suchen..." style="flex:1; padding:12px; border:none; background:#e3e3e8; border-radius:10px;" onkeyup="app.renderVocabList()">
@@ -98,7 +104,6 @@
         <div class="vocab-list" id="vocabListContainer"></div>
     </div>
 
-    <!-- STATS TAB -->
     <div id="tab-stats" class="tab-content">
         <div class="stats-grid">
             <div class="stat-card"><span class="stat-num" style="color:var(--primary)" id="statTotalWords">0</span><span style="font-size:13px;color:#8E8E93">GESAMT</span></div>
@@ -112,7 +117,12 @@
         </div>
     </div>
 </div>
+<div id="toast"></div>
+
 <script>
+// -------------------------------------------------------
+// VOKABELN HIER EINFÜGEN (BITTE DEINE 620 EINFÜGEN)
+// -------------------------------------------------------
 const RAW_VOCAB = [
 ["и","and"],["в","in, at"],["не","not"],["он","he"],["на","on, at"],["я","I"],["что","what, that"],["тот","that"],["быть","to be"],["с","with, from"],
 ["а","and, but"],["весь","all"],["это","this is"],["как","how"],["она","she"],["по","along, by"],["но","but"],["они","they"],["к","to"],["у","at, by"],
@@ -183,26 +193,61 @@ const app = {
     state: { cards: [], selected: null, locked: false, matches: 0, totalPairs: 0, mode: 'normal' },
 
     init() {
-        const stored = localStorage.getItem('ru_trainer_smart_v3_safe');
+        // Neue Storage Key V13 (The Tank)
+        const stored = localStorage.getItem('ru_trainer_v13_hardened');
+        let savedStats = {};
+
+        // Versuch: Alte Stats retten (Falls möglich)
         if (stored) {
-            this.data = JSON.parse(stored);
-            // Daten-Reparatur bei Update
-            this.data.vocab.forEach(v => {
-                if(typeof v.box === 'undefined') v.box = 0;
-                if(typeof v.errors === 'undefined') v.errors = 0;
-            });
-        } else {
-            this.data.vocab = RAW_VOCAB.map(p => ({ russian: p[0], english: p[1], errors: 0, box: 0 }));
+            try {
+                const parsed = JSON.parse(stored);
+                this.data.stats = parsed.stats || { rounds: 0, pairsFound: 0, totalErrors: 0 };
+                if(parsed.vocab) {
+                    parsed.vocab.forEach(v => {
+                        // TRIMMED KEY IS THE SECRET
+                        if(v.russian) savedStats[v.russian.trim()] = { errors: v.errors || 0, box: v.box || 0 };
+                    });
+                }
+            } catch(e) {}
         }
+
+        // NEUBAU DER LISTE (Mit Trim Protection)
+        this.data.vocab = RAW_VOCAB.map(p => {
+            const ru = String(p[0]).trim(); // KILL WHITESPACE
+            const en = String(p[1]).trim(); // KILL WHITESPACE
+            const stats = savedStats[ru] || { errors: 0, box: 0 }; 
+            return {
+                russian: ru,
+                english: en,
+                errors: stats.errors,
+                box: stats.box
+            };
+        });
+
+        this.save();
         this.updateUI();
         this.startNewGame('normal');
     },
-    save() { try { localStorage.setItem('ru_trainer_smart_v3_safe', JSON.stringify(this.data)); } catch(e){console.log('Storage error', e);} this.updateUI(); },
+    
+    save() { 
+        try { localStorage.setItem('ru_trainer_v13_hardened', JSON.stringify(this.data)); } 
+        catch(e){ console.log('Save failed', e); } 
+        this.updateUI(); 
+    },
+    
+    showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2000);
+    },
     
     switchTab(id) {
         document.querySelectorAll('.tab-btn, .tab-content').forEach(e => e.classList.remove('active'));
         document.querySelectorAll('.tab-btn')[['game','weak','manage','stats'].indexOf(id)].classList.add('active');
         document.getElementById('tab-'+id).classList.add('active');
+        this.updateUI(); 
+        if(id === 'manage') this.renderVocabList();
     },
 
     startNewGame(mode) {
@@ -214,15 +259,14 @@ const app = {
         let pool = [];
         
         if (mode === 'weak') {
+            // EXPLICIT FILTER CHECK
             pool = this.data.vocab.filter(v => v.errors > 0);
-            if (pool.length === 0) return alert("Keine Fehler zum Üben!");
+            if (pool.length === 0) return alert("Keine Fehler gespeichert! (Liste ist leer)");
         } else {
             let all = [...this.data.vocab];
             all.sort((a, b) => {
-                let boxA = a.box || 0; let boxB = b.box || 0;
-                let errA = a.errors || 0; let errB = b.errors || 0;
-                let scoreA = (errA * 100) + ((5 - boxA) * 10) + Math.random() * 20;
-                let scoreB = (errB * 100) + ((5 - boxB) * 10) + Math.random() * 20;
+                let scoreA = (a.errors * 1000) + ((5 - (a.box||0)) * 50) + Math.random() * 100;
+                let scoreB = (b.errors * 1000) + ((5 - (b.box||0)) * 50) + Math.random() * 100;
                 return scoreB - scoreA;
             });
             pool = all.slice(0, 5);
@@ -232,8 +276,9 @@ const app = {
         const selection = pool.slice(0, count);
         this.state.totalPairs = selection.length;
 
-        let ru = selection.map(w => ({ id: w.russian, text: w.russian, type: 'ru', ref: w }));
-        let en = selection.map(w => ({ id: w.russian, text: w.english, type: 'en', ref: w }));
+        // PairID ist immer das getrimmte russische Wort
+        let ru = selection.map(w => ({ text: w.russian, type: 'ru', pairId: w.russian })); 
+        let en = selection.map(w => ({ text: w.english, type: 'en', pairId: w.russian })); 
         
         ru.sort(() => Math.random() - 0.5);
         en.sort(() => Math.random() - 0.5);
@@ -274,63 +319,84 @@ const app = {
 
     checkMatch(c1, c2) {
         this.state.locked = true;
-        const isMatch = c1.data.id === c2.data.id;
+        const isMatch = c1.data.pairId === c2.data.pairId;
 
         if (isMatch) {
             setTimeout(() => {
-                c1.el.classList.replace('selected','matched'); c2.el.classList.replace('selected','matched');
-                this.state.matches++; this.data.stats.pairsFound++;
+                if(c1.el) c1.el.classList.replace('selected','matched'); 
+                if(c2.el) c2.el.classList.replace('selected','matched');
                 
-                try {
-                    let wordRef = this.data.vocab.find(v => v.russian === c1.data.ref.russian);
-                    if(wordRef) {
-                        if(!wordRef.box) wordRef.box = 0;
-                        if(wordRef.box < 5) wordRef.box++;
-                        if(wordRef.errors > 0) wordRef.errors--;
-                        this.save();
-                    }
-                } catch(e){}
-
+                this.state.matches++;
+                this.state.selected = null; 
+                this.state.locked = false;
                 document.getElementById('gameProgress').textContent = `${this.state.matches} / ${this.state.totalPairs} Paare`;
-                this.state.selected = null; this.state.locked = false;
-                
+
+                // POSITIVE UPDATE
+                const w = this.data.vocab.find(v => v.russian === c1.data.pairId);
+                if(w) {
+                    if(!w.box) w.box = 0;
+                    if(w.box < 5) w.box++;
+                    if(w.errors > 0) w.errors--;
+                    this.save();
+                }
+
                 if(this.state.matches === this.state.totalPairs) setTimeout(() => {
                     if(confirm("Runde fertig! Weiter?")) this.startNewGame(this.state.mode);
                 }, 300);
             }, 300);
         } else {
-            // VISUALS
+            // ERROR LOGIC - THE TANK METHOD
             c1.el.classList.add('error'); c2.el.classList.add('error');
-            
-            // DATEN UPDATE (Safe Block)
-            try {
-                let wordRef = this.data.vocab.find(v => v.russian === c1.data.ref.russian);
-                if(wordRef) {
-                    wordRef.box = 1;
-                    wordRef.errors = (wordRef.errors || 0) + 1;
-                    this.data.stats.totalErrors++;
-                    this.save();
-                }
-            } catch(e) { console.error("Error saving stats", e); }
+            this.showToast("Fehler gespeichert!"); // VISUAL CONFIRMATION
 
-            // RESET (Garantiert)
             setTimeout(() => {
-                c1.el.classList.remove('selected','error'); c2.el.classList.remove('selected','error');
-                this.state.selected = null; this.state.locked = false;
+                if(c1.el) c1.el.classList.remove('selected','error');
+                if(c2.el) c2.el.classList.remove('selected','error');
+                this.state.selected = null; 
+                this.state.locked = false;
             }, 800);
+
+            // 1. Update für Karte 1
+            let w1 = this.data.vocab.find(v => v.russian === c1.data.pairId);
+            if(w1) { 
+                w1.errors = (w1.errors || 0) + 1; 
+                w1.box = 1; 
+            } else { console.error("Word 1 not found:", c1.data.pairId); }
+
+            // 2. Update für Karte 2 (falls unterschiedlich)
+            if(c1.data.pairId !== c2.data.pairId) {
+                let w2 = this.data.vocab.find(v => v.russian === c2.data.pairId);
+                if(w2) { 
+                    w2.errors = (w2.errors || 0) + 1; 
+                    w2.box = 1; 
+                } else { console.error("Word 2 not found:", c2.data.pairId); }
+            }
+
+            this.data.stats.totalErrors++;
+            this.save(); // SAVE IMMEDIATELY
         }
     },
 
     updateUI() {
-        document.getElementById('statTotalWords').textContent = this.data.vocab.length;
+        const total = this.data.vocab.length;
+        const errorWords = this.data.vocab.filter(v => v.errors > 0).length;
+        
+        document.getElementById('statTotalWords').textContent = total;
         document.getElementById('statRounds').textContent = this.data.stats.rounds;
         document.getElementById('statPairsFound').textContent = this.data.stats.pairsFound;
         document.getElementById('statErrors').textContent = this.data.stats.totalErrors;
         document.getElementById('statMastered').textContent = this.data.vocab.filter(v => v.box === 5).length;
         
-        const weakCount = this.data.vocab.filter(v => v.errors > 0).length;
-        document.getElementById('weakCountDisplay').textContent = `${weakCount} Wörter`;
-        document.getElementById('btnStartWeak').style.opacity = weakCount ? 1 : 0.5;
+        document.getElementById('weakCountDisplay').textContent = `${errorWords} Wörter`;
+        document.getElementById('btnStartWeak').style.opacity = errorWords > 0 ? 1 : 0.5;
+        
+        const badge = document.getElementById('weakBadge');
+        if(errorWords > 0) {
+            badge.textContent = errorWords;
+            badge.style.display = 'block';
+        } else {
+            badge.style.display = 'none';
+        }
     },
 
     renderVocabList() {
@@ -342,13 +408,13 @@ const app = {
                 const boxClass = v.box === 5 ? 'master' : '';
                 d.innerHTML = `
                     <div><strong>${v.russian}</strong> <span class="box-badge ${boxClass}">Box ${v.box||0}</span><br><small>${v.english}</small></div>
-                    ${v.errors ? `<div style="background:var(--danger);color:#fff;padding:2px 8px;border-radius:8px;font-size:12px">${v.errors}</div>` : ''}
+                    ${v.errors ? `<div style="background:var(--danger);color:#fff;padding:2px 8px;border-radius:8px;font-size:12px">${v.errors} Fehler</div>` : ''}
                 `;
                 list.appendChild(d);
             });
     },
     resetStats() { if(confirm('Lernfortschritt zurücksetzen?')) { this.data.stats={rounds:0,pairsFound:0,totalErrors:0}; this.data.vocab.forEach(v=>{v.errors=0; v.box=0;}); this.save(); } },
-    hardReset() { if(confirm('Alles Löschen?')) { localStorage.removeItem('ru_trainer_smart_v3_safe'); location.reload(); } }
+    hardReset() { if(confirm('Alles Löschen?')) { localStorage.removeItem('ru_trainer_v13_hardened'); location.reload(); } }
 };
 document.addEventListener('DOMContentLoaded', () => app.init());
 </script>
