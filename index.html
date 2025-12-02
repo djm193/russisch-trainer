@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Russisch 500 Pro</title>
+    <title>Russisch Smart Trainer (Safe)</title>
     <style>
         :root {
             --primary: #007AFF; --bg: #F2F2F7; --card: #FFF; --text: #000; --sub: #8E8E93;
             --danger: #FF3B30; --success: #34C759; --radius: 16px; --shadow: 0 2px 8px rgba(0,0,0,0.08);
+            --gold: #FFD700;
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
@@ -26,6 +27,7 @@
         .tab-content { display: none; height: 100%; flex-direction: column; padding: 16px; overflow-y: auto; }
         .tab-content.active { display: flex; }
         .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-shrink: 0; }
+        
         .game-grid {
             display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(5, 1fr);
             gap: 12px; flex: 1; height: 100%; padding-bottom: env(safe-area-inset-bottom);
@@ -45,11 +47,16 @@
         .speaker-icon { color: var(--sub); margin-top: 6px; width: 20px; height: 20px; }
         .card.selected .speaker-icon { color: var(--primary); }
         .btn { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; }
-        .vocab-item { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; background: white; }
+        
+        .vocab-item { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: white; }
         .vocab-list { background: white; border-radius: var(--radius); overflow: hidden; }
+        .box-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #eee; color: #666; margin-left: 5px; }
+        .box-badge.master { background: var(--gold); color: #fff; }
+
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .stat-card { background: white; padding: 20px; border-radius: var(--radius); text-align: center; box-shadow: var(--shadow); }
         .stat-num { font-size: 28px; font-weight: 700; display: block; }
+        
         @keyframes shake { 0%,100% {transform:translateX(0)} 25% {transform:translateX(-5px)} 75% {transform:translateX(5px)} }
         @keyframes fadeIn { from {opacity:0;transform:scale(0.9)} to {opacity:1;transform:scale(1)} }
     </style>
@@ -62,166 +69,113 @@
     <button class="tab-btn" onclick="app.switchTab('stats')">Profil</button>
 </nav>
 <div class="content-area">
+    <!-- GAME TAB -->
     <div id="tab-game" class="tab-content active">
         <div class="game-header">
             <div style="color:#8E8E93; font-weight:500" id="gameProgress">0 / 5 Paare</div>
-            <button class="btn" onclick="app.startNewGame('normal')">Neu Mischen ↻</button>
+            <button class="btn" onclick="app.startNewGame('normal')">Weiter Lernen ▶</button>
         </div>
         <div id="gameBoard" class="game-grid"></div>
     </div>
+
+    <!-- WEAK TAB -->
     <div id="tab-weak" class="tab-content">
         <div class="game-header">
             <div><strong>Fehler üben</strong><br><span style="color:#8E8E93" id="weakCountDisplay">0 Wörter</span></div>
             <button class="btn" id="btnStartWeak" onclick="app.startNewGame('weak')">Starten ▶</button>
         </div>
-        <div id="weakBoard" class="game-grid" style="border: 2px dashed #ddd; border-radius: 16px; display:flex; justify-content:center; align-items:center; color:#999">
-            Hier erscheinen deine Übungen.
+        <div id="weakBoard" class="game-grid" style="border: 2px dashed #ddd; border-radius: 16px; display:flex; justify-content:center; align-items:center; color:#999; text-align:center; padding:20px">
+            Wörter, die du falsch machst,<br>landen hier zur Wiederholung.
         </div>
     </div>
+
+    <!-- LIST TAB -->
     <div id="tab-manage" class="tab-content">
-        <input type="text" id="searchInput" placeholder="Suchen..." style="width:100%; padding:12px; border:none; background:#e3e3e8; border-radius:10px; margin-bottom:15px" onkeyup="app.renderVocabList()">
+        <div style="display:flex; gap:10px; margin-bottom:15px">
+             <input type="text" id="searchInput" placeholder="Suchen..." style="flex:1; padding:12px; border:none; background:#e3e3e8; border-radius:10px;" onkeyup="app.renderVocabList()">
+             <div style="padding:12px; background:#fff; border-radius:10px; font-size:12px; display:flex; align-items:center">Box 0-5</div>
+        </div>
         <div class="vocab-list" id="vocabListContainer"></div>
     </div>
+
+    <!-- STATS TAB -->
     <div id="tab-stats" class="tab-content">
         <div class="stats-grid">
             <div class="stat-card"><span class="stat-num" style="color:var(--primary)" id="statTotalWords">0</span><span style="font-size:13px;color:#8E8E93">GESAMT</span></div>
-            <div class="stat-card"><span class="stat-num" style="color:var(--success)" id="statPairsFound">0</span><span style="font-size:13px;color:#8E8E93">GELÖST</span></div>
+            <div class="stat-card"><span class="stat-num" style="color:var(--gold)" id="statMastered">0</span><span style="font-size:13px;color:#8E8E93">MEISTER</span></div>
             <div class="stat-card"><span class="stat-num" id="statRounds">0</span><span style="font-size:13px;color:#8E8E93">RUNDEN</span></div>
             <div class="stat-card"><span class="stat-num" style="color:var(--danger)" id="statErrors">0</span><span style="font-size:13px;color:#8E8E93">FEHLER</span></div>
         </div>
         <div style="margin-top:auto; gap:10px; display:flex; flex-direction:column; padding-top:20px">
-            <button class="btn" style="background:#8E8E93" onclick="app.resetStats()">Statistik Reset</button>
+            <button class="btn" style="background:#8E8E93" onclick="app.resetStats()">Lernfortschritt Reset</button>
             <button class="btn" style="background:var(--danger)" onclick="app.hardReset()">Alles Löschen</button>
         </div>
     </div>
 </div>
 <script>
-// Top 500+ Frequency List (Merged & Deduped)
 const RAW_VOCAB = [
-["и","and"],["в","in, at"],["не","not"],["он","he"],["на","on, at"],
-["я","I"],["что","what, that"],["тот","that"],["быть","to be"],["с","with, from"],
-["а","and, but"],["весь","all"],["это","this is"],["как","how"],["она","she"],
-["по","along, by"],["но","but"],["они","they"],["к","to"],["у","at, by"],
-["ты","you (singular)"],["из","from"],["мы","we"],["за","behind, for"],["вы","you (plural)"],
-["так","so"],["же","particle: same"],["от","from"],["сказать","to say"],["этот","this"],
-["который","which"],["мочь","can, be able"],["человек","person, man"],["о","about"],["один","one"],
-["ещё","still, yet"],["бы","particle: would"],["такой","such"],["только","only"],["себя","myself/self"],
-["своё","one's own"],["какой","what, which"],["когда","when"],["уже","already"],["для","for"],
-["вот","here is"],["кто","who"],["да","yes"],["говорить","to speak"],["год","year"],
-["знать","to know"],["мой","my"],["до","until"],["или","or"],["если","if"],
-["время","time"],["рука","hand, arm"],["нет","no"],["самый","the most"],["ни","neither"],
-["стать","to become"],["большой","big"],["даже","even"],["другой","other"],["наш","our"],
-["свой","own"],["ну","well"],["под","under"],["где","where"],["дело","business, affair"],
-["есть","to eat / there is"],["сам","self"],["раз","time (once)"],["чтобы","in order to"],["два","two"],
-["там","there"],["чем","than"],["глаз","eye"],["жизнь","life"],["первый","first"],
-["день","day"],["тут","here"],["во","in"],["ничто","nothing"],["потом","then, after"],
-["очень","very"],["со","with"],["хотеть","to want"],["ли","whether"],["при","at, by"],
-["голова","head"],["надо","must, need"],["без","without"],["видеть","to see"],["идти","to go"],
-["теперь","now"],["тоже","also"],["стоять","to stand"],["друг","friend"],["дом","house"],
-["сейчас","now"],["можно","possible"],["после","after"],["слово","word"],["здесь","here"],
-["думать","to think"],["место","place"],["спросить","to ask"],["через","through"],["лицо","face"],
-["тогда","then"],["ведь","after all"],["хороший","good"],["каждый","each"],["новый","new"],
-["жить","to live"],["должен","must, owe"],["смотреть","to watch"],["почему","why"],["потому","because"],
-["сторона","side"],["просто","simply"],["нога","leg, foot"],["сидеть","to sit"],["понять","to understand"],
-["иметь","to have"],["конечно","of course"],["взять","to take"],["делать","to do"],["сделать","to make"],
-["дверь","door"],["работа","work"],["книга","book"],["город","city"],["три","three"],
-["твой","your"],["конец","end"],["начать","to start"],["несколько","several"],["голос","voice"],
-["час","hour"],["ждать","to wait"],["последний","last"],["вид","view, kind"],["тысяча","thousand"],
-["хорошо","good/well"],["давать","to give"],["вода","water"],["земля","earth"],["второй","second"],
-["случай","case"],["писать","to write"],["машина","car"],["остаться","to remain"],["выйти","to go out"],
-["женщина","woman"],["отец","father"],["сила","force"],["куда","where to"],["дать","to give"],
-["совсем","completely"],["стол","table"],["войти","to enter"],["мир","world/peace"],["пойти","to go"],
-["старый","old"],["окно","window"],["ребёнок","child"],["найти","to find"],["страна","country"],
-["увидеть","to see"],["путь","way"],["решить","to decide"],["главный","main"],["пройти","to pass"],
-["молодой","young"],["считать","to count"],["вернуться","to return"],["работать","to work"],["помнить","to remember"],
-["вечер","evening"],["опять","again"],["уйти","to leave"],["сын","son"],["ночь","night"],
-["всегда","always"],["близкий","close"],["помочь","to help"],["улица","street"],["любить","to love"],
-["ответить","to answer"],["ждать","to wait"],["народ","people"],["плечо","shoulder"],["хотя","although"],
-["сразу","immediately"],["маленький","small"],["брать","to take"],["узнать","to find out"],["вопрос","question"],
-["свет","light"],["быстро","quickly"],["много","many"],["русский","Russian"],["лишь","only"],
-["форма","form/uniform"],["взгляд","glance"],["вдруг","suddenly"],["любовь","love"],["прийти","to arrive"],
-["услышать","to hear"],["казаться","to seem"],["комната","room"],["мать","mother"],["получить","to receive"],
-["глаза","eyes"],["никто","nobody"],["деньги","money"],["оно","it"],["почти","almost"],
-["имя","name"],["тело","body"],["книга","book"],["право","right"],["лес","forest"],
-["утро","morning"],["наконец","finally"],["писать","to write"],["дорога","road"],["муж","husband"],
-["пять","five"],["находиться","to be located"],["читать","to read"],["группа","group"],["война","war"],
-["жена","wife"],["начало","beginning"],["семья","family"],["спать","to sleep"],["мама","mom"],
-["забыть","to forget"],["показать","to show"],["курс","course"],["движение","movement"],["мужчина","man"],
-["играть","to play"],["чувствовать","to feel"],["встреча","meeting"],["причина","reason"],["мысль","thought/idea"],
-["вместе","together"],["интересный","interesting"],["смерть","death"],["вообще","in general"],["месяц","month"],
-["часто","often"],["советский","Soviet"],["правило","rule"],["слышать","to hear"],["девушка","girl"],
-["проблема","problem"],["решение","decision"],["система","system"],["история","history"],["власть","power"],
-["называть","to name"],["закон","law"],["назад","back/ago"],["язык","language"],["настоящий","real"],
-["состояние","state/condition"],["внимание","attention"],["сердце","heart"],["провести","to spend (time)"],["просить","to ask"],
-["бежать","to run"],["квартира","apartment"],["приехать","to arrive"],["смочь","to be able"],["умереть","to die"],
-["положить","to put"],["искать","to search"],["образ","image/shape"],["открыть","to open"],["помощь","help"],
-["родитель","parent"],["номер","number"],["мало","few"],["длинный","long"],["минута","minute"],
-["легко","easy"],["школа","school"],["знак","sign"],["солнце","sun"],["компания","company"],
-["счастье","happiness"],["воздух","air"],["брат","brother"],["сильный","strong"],["всё","everything"],
-["затем","then"],["игра","game"],["армия","army"],["роль","role"],["начальник","boss"],
-["принять","to accept"],["город","city"],["учиться","to study"],["социальный","social"],["однако","however"],
-["появиться","to appear"],["написать","to write"],["красный","red"],["государство","state"],["заниматься","to be occupied with"],
-["вполне","fully"],["четыре","four"],["верить","to believe"],["семь","seven"],["десять","ten"],
-["важный","important"],["точно","exactly"],["событие","event"],["труд","labor"],["представить","to imagine"],
-["следующий","next"],["вещь","thing"],["порядок","order"],["известный","famous"],["развитие","development"],
-["письмо","letter"],["условие","condition"],["оставаться","to remain"],["поздний","late"],["выходить","to go out"],
-["час","hour"],["деньги","money"],["план","plan"],["начинать","to begin"],["скоро","soon"],
-["встретить","to meet"],["директор","director"],["центр","center"],["позволить","to allow"],["получать","to receive"],
-["полный","full"],["церковь","church"],["слушать","to listen"],["уровень","level"],["действие","action"],
-["вновь","again"],["красивый","beautiful"],["понимать","to understand"],["приходить","to come"],["происходить","to happen"],
-["свободный","free"],["качество","quality"],["разговор","conversation"],["черный","black"],["белый","white"],
-["купить","to buy"],["похожий","similar"],["надеяться","to hope"],["упасть","to fall"],["потом","then"],
-["телефон","phone"],["страх","fear"],["потерять","to lose"],["предложить","to offer"],["простой","simple"],
-["цена","price"],["заметить","to notice"],["вызывать","to call"],["поведение","behavior"],["одежда","clothes"],
-["стена","wall"],["сосед","neighbor"],["собака","dog"],["дерево","tree"],["факт","fact"],
-["послать","to send"],["звук","sound"],["фильм","film"],["ехать","to go (by transport)"],["камень","stone"],
-["огонь","fire"],["цель","goal"],["врач","doctor"],["больница","hospital"],["продукт","product"],
-["вкус","taste"],["мнение","opinion"],["ошибка","mistake"],["старик","old man"],["кошка","cat"],
-["цвет","color"],["ветер","wind"],["дождь","rain"],["снег","snow"],["утро","morning"],
-["золото","gold"],["рыба","fish"],["птица","bird"],["хлеб","bread"],["мясо","meat"],
-["молоко","milk"],["чай","tea"],["кофе","coffee"],["сахар","sugar"],["соль","salt"],
-["завтрак","breakfast"],["обед","lunch"],["ужин","dinner"],["магазин","shop"],["рынок","market"],
-["платить","to pay"],["стоит","costs"],["дорогой","expensive/dear"],["дешевый","cheap"],["открыто","open"],
-["закрыто","closed"],["вход","entrance"],["выход","exit"],["туалет","toilet"],["мужчина","man"],
-["женщина","woman"],["мальчик","boy"],["девочка","girl"],["друг","friend"],["гость","guest"],
-["подарок","gift"],["праздник","holiday"],["новый год","New Year"],["день рождения","birthday"],["спасибо","thank you"],
-["пожалуйста","please"],["здравствуйте","hello"],["привет","hi"],["до свидания","goodbye"],["извините","sorry"],
-["плохо","badly"],["медленно","slowly"],["много","a lot"],["немного","a little"],["сегодня","today"],
-["завтра","tomorrow"],["вчера","yesterday"],["неделя","week"],["понедельник","Monday"],["вторник","Tuesday"],
-["среда","Wednesday"],["четверг","Thursday"],["пятница","Friday"],["суббота","Saturday"],["воскресенье","Sunday"],
-["январь","January"],["февраль","February"],["март","March"],["апрель","April"],["май","May"],
-["июнь","June"],["июль","July"],["август","August"],["сентябрь","September"],["октябрь","October"],
-["ноябрь","November"],["декабрь","December"],["зима","winter"],["весна","spring"],["лето","summer"],
-["осень","autumn"],["погода","weather"],["градус","degree"],["тепло","warm"],["холодно","cold"],
-["жарко","hot"],["солнечно","sunny"],["облачно","cloudy"],["опасный","dangerous"],["безопасный","safe"],
-["чистый","clean"],["грязный","dirty"],["умный","smart"],["глупый","stupid"],["богатый","rich"],
-["бедный","poor"],["здоровый","healthy"],["больной","sick"],["счастливый","happy"],["грустный","sad"],
-["смешной","funny"],["серьезный","serious"],["добрый","kind"],["злой","angry"],["старший","older"],
-["младший","younger"],["громкий","loud"],["тихий","quiet"],["высокий","tall/high"],["низкий","low/short"],
-["широкий","wide"],["узкий","narrow"],["толстый","fat/thick"],["тонкий","thin"],["тяжелый","heavy"],
-["легкий","light/easy"],["мягкий","soft"],["твердый","hard"],["сухой","dry"],["мокрый","wet"],
-["пустой","empty"],["сладкий","sweet"],["горький","bitter"],["кислый","sour"],["свежий","fresh"],
-["быстрый","fast"],["медленный","slow"],["правильный","correct"],["неправильный","wrong"],["удобный","comfortable"],
-["важный","important"],["нужный","necessary"],["готовый","ready"],["свободный","free"],["занятый","busy"],
-["открытый","open"],["закрытый","closed"],["любимый","favorite"],["прекрасный","wonderful"],["ужасный","terrible"],
-["странный","strange"],["обычный","usual"],["разный","different"],["похожий","similar"],["одинаковый","same"],
-["общий","common"],["личный","personal"],["частный","private"],["общественный","public"],["государственный","state"],
-["национальный","national"],["международный","international"],["военный","military"],["медицинский","medical"],["научный","scientific"],
-["технический","technical"],["экономический","economic"],["политический","political"],["исторический","historical"],["культурный","cultural"],
-["детский","children's"],["женский","female"],["мужской","male"],["школьный","school"],["университетский","university"],
-["городской","urban"],["сельский","rural"],["деревенский","village"],["домашний","home/domestic"],["дикий","wild"],
-["живой","alive"],["мертвый","dead"],["больной","sick"],["беременная","pregnant"],["пьяный","drunk"],
-["сытой","full (food)"],["голодный","hungry"],["усталый","tired"],["рад","glad"],["уверенный","sure"],
-["виноват","guilty"],["прав","right"],["согласен","agree"],["готов","ready"],["должен","must"],
-["нужен","needed"],["способен","capable"],["благодарен","grateful"],["женат","married (man)"],["замужем","married (woman)"],
-["полезный","useful"],["вредный","harmful"],["опасный","dangerous"],["безопасный","safe"],["возможный","possible"],
-["невозможный","impossible"],["вероятный","probable"],["очевидный","obvious"],["понятный","understandable"],["известный","known"],
-["знакомый","familiar"],["незнакомый","unfamiliar"],["интересный","interesting"],["скучный","boring"],["веселый","merry"],
-["грустный","sad"],["смешной","funny"],["серьезный","serious"],["спокойный","calm"],["нервный","nervous"],
-["активный","active"],["пассивный","passive"],["сильный","strong"],["слабый","weak"],["умный","smart"],
-["честный","honest"],["хитрый","cunning"],["смелый","brave"],["трусливый","cowardly"],["добрый","kind"],
-["жестокий","cruel"],["жадный","greedy"],["щедрый","generous"],["вежливый","polite"],["грубый","rude"],
-["внимательный","attentive"],["осторожный","careful"],["аккуратный","neat"],["ленивый","lazy"],["трудолюбивый","hardworking"]
+["и","and"],["в","in, at"],["не","not"],["он","he"],["на","on, at"],["я","I"],["что","what, that"],["тот","that"],["быть","to be"],["с","with, from"],
+["а","and, but"],["весь","all"],["это","this is"],["как","how"],["она","she"],["по","along, by"],["но","but"],["они","they"],["к","to"],["у","at, by"],
+["ты","you (singular)"],["из","from"],["мы","we"],["за","behind, for"],["вы","you (plural)"],["так","so"],["же","particle: same"],["от","from"],["сказать","to say"],["этот","this"],
+["который","which"],["мочь","can, be able"],["человек","person, man"],["о","about"],["один","one"],["ещё","still, yet"],["бы","particle: would"],["такой","such"],["только","only"],["себя","myself/self"],
+["своё","one's own"],["какой","what, which"],["когда","when"],["уже","already"],["для","for"],["вот","here is"],["кто","who"],["да","yes"],["говорить","to speak"],["год","year"],
+["знать","to know"],["мой","my"],["до","until"],["или","or"],["если","if"],["время","time"],["рука","hand, arm"],["нет","no"],["самый","the most"],["ни","neither"],
+["стать","to become"],["большой","big"],["даже","even"],["другой","other"],["наш","our"],["свой","own"],["ну","well"],["под","under"],["где","where"],["дело","business, affair"],
+["есть","to eat / there is"],["сам","self"],["раз","time (once)"],["чтобы","in order to"],["два","two"],["там","there"],["чем","than"],["глаз","eye"],["жизнь","life"],["первый","first"],
+["день","day"],["тут","here"],["во","in"],["ничто","nothing"],["потом","then, after"],["очень","very"],["со","with"],["хотеть","to want"],["ли","whether"],["при","at, by"],
+["голова","head"],["надо","must, need"],["без","without"],["видеть","to see"],["идти","to go"],["теперь","now"],["тоже","also"],["стоять","to stand"],["друг","friend"],["дом","house"],
+["сейчас","now"],["можно","possible"],["после","after"],["слово","word"],["здесь","here"],["думать","to think"],["место","place"],["спросить","to ask"],["через","through"],["лицо","face"],
+["тогда","then"],["ведь","after all"],["хороший","good"],["каждый","each"],["новый","new"],["жить","to live"],["должен","must, owe"],["смотреть","to watch"],["почему","why"],["потому","because"],
+["сторона","side"],["просто","simply"],["нога","leg, foot"],["сидеть","to sit"],["понять","to understand"],["иметь","to have"],["конечно","of course"],["взять","to take"],["делать","to do"],["сделать","to make"],
+["дверь","door"],["работа","work"],["книга","book"],["город","city"],["три","three"],["твой","your"],["конец","end"],["начать","to start"],["несколько","several"],["голос","voice"],
+["час","hour"],["ждать","to wait"],["последний","last"],["вид","view, kind"],["тысяча","thousand"],["хорошо","good/well"],["давать","to give"],["вода","water"],["земля","earth"],["второй","second"],
+["случай","case"],["писать","to write"],["машина","car"],["остаться","to remain"],["выйти","to go out"],["женщина","woman"],["отец","father"],["сила","force"],["куда","where to"],["дать","to give"],
+["совсем","completely"],["стол","table"],["войти","to enter"],["мир","world/peace"],["пойти","to go"],["старый","old"],["окно","window"],["ребёнок","child"],["найти","to find"],["страна","country"],
+["увидеть","to see"],["путь","way"],["решить","to decide"],["главный","main"],["пройти","to pass"],["молодой","young"],["считать","to count"],["вернуться","to return"],["работать","to work"],["помнить","to remember"],
+["вечер","evening"],["опять","again"],["уйти","to leave"],["сын","son"],["ночь","night"],["всегда","always"],["близкий","close"],["помочь","to help"],["улица","street"],["любить","to love"],
+["ответить","to answer"],["ждать","to wait"],["народ","people"],["плечо","shoulder"],["хотя","although"],["сразу","immediately"],["маленький","small"],["брать","to take"],["узнать","to find out"],["вопрос","question"],
+["свет","light"],["быстро","quickly"],["много","many"],["русский","Russian"],["лишь","only"],["форма","form/uniform"],["взгляд","glance"],["вдруг","suddenly"],["любовь","love"],["прийти","to arrive"],
+["услышать","to hear"],["казаться","to seem"],["комната","room"],["мать","mother"],["получить","to receive"],["глаза","eyes"],["никто","nobody"],["деньги","money"],["оно","it"],["почти","almost"],
+["имя","name"],["тело","body"],["книга","book"],["право","right"],["лес","forest"],["утро","morning"],["наконец","finally"],["писать","to write"],["дорога","road"],["муж","husband"],
+["пять","five"],["находиться","to be located"],["читать","to read"],["группа","group"],["война","war"],["жена","wife"],["начало","beginning"],["семья","family"],["спать","to sleep"],["мама","mom"],
+["забыть","to forget"],["показать","to show"],["курс","course"],["движение","movement"],["мужчина","man"],["играть","to play"],["чувствовать","to feel"],["встреча","meeting"],["причина","reason"],["мысль","thought/idea"],
+["вместе","together"],["интересный","interesting"],["смерть","death"],["вообще","in general"],["месяц","month"],["часто","often"],["советский","Soviet"],["правило","rule"],["слышать","to hear"],["девушка","girl"],
+["проблема","problem"],["решение","decision"],["система","system"],["история","history"],["власть","power"],["называть","to name"],["закон","law"],["назад","back/ago"],["язык","language"],["настоящий","real"],
+["состояние","state/condition"],["внимание","attention"],["сердце","heart"],["провести","to spend (time)"],["просить","to ask"],["бежать","to run"],["квартира","apartment"],["приехать","to arrive"],["смочь","to be able"],["умереть","to die"],
+["положить","to put"],["искать","to search"],["образ","image/shape"],["открыть","to open"],["помощь","help"],["родитель","parent"],["номер","number"],["мало","few"],["длинный","long"],["минута","minute"],
+["легко","easy"],["школа","school"],["знак","sign"],["солнце","sun"],["компания","company"],["счастье","happiness"],["воздух","air"],["брат","brother"],["сильный","strong"],["всё","everything"],
+["затем","then"],["игра","game"],["армия","army"],["роль","role"],["начальник","boss"],["принять","to accept"],["город","city"],["учиться","to study"],["социальный","social"],["однако","however"],
+["появиться","to appear"],["написать","to write"],["красный","red"],["государство","state"],["заниматься","to be occupied with"],["вполне","fully"],["четыре","four"],["верить","to believe"],["семь","seven"],["десять","ten"],
+["важный","important"],["точно","exactly"],["событие","event"],["труд","labor"],["представить","to imagine"],["следующий","next"],["вещь","thing"],["порядок","order"],["известный","famous"],["развитие","development"],
+["письмо","letter"],["условие","condition"],["оставаться","to remain"],["поздний","late"],["выходить","to go out"],["час","hour"],["деньги","money"],["план","plan"],["начинать","to begin"],["скоро","soon"],
+["встретить","to meet"],["директор","director"],["центр","center"],["позволить","to allow"],["получать","to receive"],["полный","full"],["церковь","church"],["слушать","to listen"],["уровень","level"],["действие","action"],
+["вновь","again"],["красивый","beautiful"],["понимать","to understand"],["приходить","to come"],["происходить","to happen"],["свободный","free"],["качество","quality"],["разговор","conversation"],["черный","black"],["белый","white"],
+["купить","to buy"],["похожий","similar"],["надеяться","to hope"],["упасть","to fall"],["потом","then"],["телефон","phone"],["страх","fear"],["потерять","to lose"],["предложить","to offer"],["простой","simple"],
+["цена","price"],["заметить","to notice"],["вызывать","to call"],["поведение","behavior"],["одежда","clothes"],["стена","wall"],["сосед","neighbor"],["собака","dog"],["дерево","tree"],["факт","fact"],
+["послать","to send"],["звук","sound"],["фильм","film"],["ехать","to go (by transport)"],["камень","stone"],["огонь","fire"],["цель","goal"],["врач","doctor"],["больница","hospital"],["продукт","product"],
+["вкус","taste"],["мнение","opinion"],["ошибка","mistake"],["старик","old man"],["кошка","cat"],["цвет","color"],["ветер","wind"],["дождь","rain"],["снег","snow"],["утро","morning"],
+["золото","gold"],["рыба","fish"],["птица","bird"],["хлеб","bread"],["мясо","meat"],["молоко","milk"],["чай","tea"],["кофе","coffee"],["сахар","sugar"],["соль","salt"],
+["завтрак","breakfast"],["обед","lunch"],["ужин","dinner"],["магазин","shop"],["рынок","market"],["платить","to pay"],["стоит","costs"],["дорогой","expensive/dear"],["дешевый","cheap"],["открыто","open"],
+["закрыто","closed"],["вход","entrance"],["выход","exit"],["туалет","toilet"],["мужчина","man"],["женщина","woman"],["мальчик","boy"],["девочка","girl"],["друг","friend"],["гость","guest"],
+["подарок","gift"],["праздник","holiday"],["новый год","New Year"],["день рождения","birthday"],["спасибо","thank you"],["пожалуйста","please"],["здравствуйте","hello"],["привет","hi"],["до свидания","goodbye"],["извините","sorry"],
+["плохо","badly"],["медленно","slowly"],["много","a lot"],["немного","a little"],["сегодня","today"],["завтра","tomorrow"],["вчера","yesterday"],["неделя","week"],["понедельник","Monday"],["вторник","Tuesday"],
+["среда","Wednesday"],["четверг","Thursday"],["пятница","Friday"],["суббота","Saturday"],["воскресенье","Sunday"],["январь","January"],["февраль","February"],["март","March"],["апрель","April"],["май","May"],
+["июнь","June"],["июль","July"],["август","August"],["сентябрь","September"],["октябрь","October"],["ноябрь","November"],["декабрь","December"],["зима","winter"],["весна","spring"],["лето","summer"],
+["осень","autumn"],["погода","weather"],["градус","degree"],["тепло","warm"],["холодно","cold"],["жарко","hot"],["солнечно","sunny"],["облачно","cloudy"],["опасный","dangerous"],["безопасный","safe"],
+["чистый","clean"],["грязный","dirty"],["умный","smart"],["глупый","stupid"],["богатый","rich"],["бедный","poor"],["здоровый","healthy"],["больной","sick"],["счастливый","happy"],["грустный","sad"],
+["смешной","funny"],["серьезный","serious"],["добрый","kind"],["злой","angry"],["старший","older"],["младший","younger"],["громкий","loud"],["тихий","quiet"],["высокий","tall/high"],["низкий","low/short"],
+["широкий","wide"],["узкий","narrow"],["толстый","fat/thick"],["тонкий","thin"],["тяжелый","heavy"],["легкий","light/easy"],["мягкий","soft"],["твердый","hard"],["сухой","dry"],["мокрый","wet"],
+["пустой","empty"],["сладкий","sweet"],["горький","bitter"],["кислый","sour"],["свежий","fresh"],["быстрый","fast"],["медленный","slow"],["правильный","correct"],["неправильный","wrong"],["удобный","comfortable"],
+["важный","important"],["нужный","necessary"],["готовый","ready"],["свободный","free"],["занятый","busy"],["открытый","open"],["закрытый","closed"],["любимый","favorite"],["прекрасный","wonderful"],["ужасный","terrible"],
+["странный","strange"],["обычный","usual"],["разный","different"],["похожий","similar"],["одинаковый","same"],["общий","common"],["личный","personal"],["частный","private"],["общественный","public"],["государственный","state"],
+["национальный","national"],["международный","international"],["военный","military"],["медицинский","medical"],["научный","scientific"],["технический","technical"],["экономический","economic"],["политический","political"],["исторический","historical"],["культурный","cultural"],
+["детский","children's"],["женский","female"],["мужской","male"],["школьный","school"],["университетский","university"],["городской","urban"],["сельский","rural"],["деревенский","village"],["домашний","home/domestic"],["дикий","wild"],
+["живой","alive"],["мертвый","dead"],["больной","sick"],["беременная","pregnant"],["пьяный","drunk"],["сытой","full (food)"],["голодный","hungry"],["усталый","tired"],["рад","glad"],["уверенный","sure"],
+["виноват","guilty"],["прав","right"],["согласен","agree"],["готов","ready"],["должен","must"],["нужен","needed"],["способен","capable"],["благодарен","grateful"],["женат","married (man)"],["замужем","married (woman)"],
+["полезный","useful"],["вредный","harmful"],["опасный","dangerous"],["безопасный","safe"],["возможный","possible"],["невозможный","impossible"],["вероятный","probable"],["очевидный","obvious"],["понятный","understandable"],["известный","known"],
+["знакомый","familiar"],["незнакомый","unfamiliar"],["интересный","interesting"],["скучный","boring"],["веселый","merry"],["грустный","sad"],["смешной","funny"],["серьезный","serious"],["спокойный","calm"],["нервный","nervous"],
+["активный","active"],["пассивный","passive"],["сильный","strong"],["слабый","weak"],["умный","smart"],["честный","honest"],["хитрый","cunning"],["смелый","brave"],["трусливый","cowardly"],["добрый","kind"],
+["жестокий","cruel"],["жадный","greedy"],["щедрый","generous"],["вежливый","polite"],["грубый","rude"],["внимательный","attentive"],["осторожный","careful"],["аккуратный","neat"],["ленивый","lazy"],["трудолюбивый","hardworking"]
 ];
 
 const app = {
@@ -229,13 +183,21 @@ const app = {
     state: { cards: [], selected: null, locked: false, matches: 0, totalPairs: 0, mode: 'normal' },
 
     init() {
-        const stored = localStorage.getItem('ru_trainer_500_v1');
-        if (stored) this.data = JSON.parse(stored);
-        else this.data.vocab = RAW_VOCAB.map(p => ({ russian: p[0], english: p[1], errors: 0 }));
+        const stored = localStorage.getItem('ru_trainer_smart_v3_safe');
+        if (stored) {
+            this.data = JSON.parse(stored);
+            // Daten-Reparatur bei Update
+            this.data.vocab.forEach(v => {
+                if(typeof v.box === 'undefined') v.box = 0;
+                if(typeof v.errors === 'undefined') v.errors = 0;
+            });
+        } else {
+            this.data.vocab = RAW_VOCAB.map(p => ({ russian: p[0], english: p[1], errors: 0, box: 0 }));
+        }
         this.updateUI();
         this.startNewGame('normal');
     },
-    save() { localStorage.setItem('ru_trainer_500_v1', JSON.stringify(this.data)); this.updateUI(); },
+    save() { try { localStorage.setItem('ru_trainer_smart_v3_safe', JSON.stringify(this.data)); } catch(e){console.log('Storage error', e);} this.updateUI(); },
     
     switchTab(id) {
         document.querySelectorAll('.tab-btn, .tab-content').forEach(e => e.classList.remove('active'));
@@ -244,23 +206,43 @@ const app = {
     },
 
     startNewGame(mode) {
-        this.state.mode = mode; this.state.matches = 0; this.state.selected = null; this.state.locked = false;
-        let pool = (mode === 'weak') ? this.data.vocab.filter(v => v.errors > 0) : [...this.data.vocab];
-        if (pool.length === 0) return mode === 'weak' ? alert("Keine Fehler!") : null;
+        this.state.mode = mode; 
+        this.state.matches = 0; 
+        this.state.selected = null; 
+        this.state.locked = false;
         
-        // Pick 5 pairs
-        pool.sort(() => Math.random() - 0.5);
-        const selection = pool.slice(0, 5);
+        let pool = [];
+        
+        if (mode === 'weak') {
+            pool = this.data.vocab.filter(v => v.errors > 0);
+            if (pool.length === 0) return alert("Keine Fehler zum Üben!");
+        } else {
+            let all = [...this.data.vocab];
+            all.sort((a, b) => {
+                let boxA = a.box || 0; let boxB = b.box || 0;
+                let errA = a.errors || 0; let errB = b.errors || 0;
+                let scoreA = (errA * 100) + ((5 - boxA) * 10) + Math.random() * 20;
+                let scoreB = (errB * 100) + ((5 - boxB) * 10) + Math.random() * 20;
+                return scoreB - scoreA;
+            });
+            pool = all.slice(0, 5);
+        }
+
+        const count = Math.min(5, pool.length);
+        const selection = pool.slice(0, count);
         this.state.totalPairs = selection.length;
 
-        // Spalten-Logik: Links (Ru) und Rechts (En) separat mischen
         let ru = selection.map(w => ({ id: w.russian, text: w.russian, type: 'ru', ref: w }));
         let en = selection.map(w => ({ id: w.russian, text: w.english, type: 'en', ref: w }));
+        
         ru.sort(() => Math.random() - 0.5);
         en.sort(() => Math.random() - 0.5);
         
         this.state.cards = [];
-        for(let i=0; i<5; i++) { this.state.cards.push(ru[i]); this.state.cards.push(en[i]); }
+        for(let i=0; i < this.state.totalPairs; i++) { 
+            this.state.cards.push(ru[i]); 
+            this.state.cards.push(en[i]); 
+        }
         
         const board = document.getElementById(mode === 'weak' ? 'weakBoard' : 'gameBoard');
         if(mode === 'weak') board.style.display = 'grid';
@@ -292,21 +274,46 @@ const app = {
 
     checkMatch(c1, c2) {
         this.state.locked = true;
-        // Wenn links und rechts das gleiche Wort haben (ID match)
-        if (c1.data.id === c2.data.id) {
+        const isMatch = c1.data.id === c2.data.id;
+
+        if (isMatch) {
             setTimeout(() => {
                 c1.el.classList.replace('selected','matched'); c2.el.classList.replace('selected','matched');
-                this.state.matches++; this.data.stats.pairsFound++; 
+                this.state.matches++; this.data.stats.pairsFound++;
+                
+                try {
+                    let wordRef = this.data.vocab.find(v => v.russian === c1.data.ref.russian);
+                    if(wordRef) {
+                        if(!wordRef.box) wordRef.box = 0;
+                        if(wordRef.box < 5) wordRef.box++;
+                        if(wordRef.errors > 0) wordRef.errors--;
+                        this.save();
+                    }
+                } catch(e){}
+
                 document.getElementById('gameProgress').textContent = `${this.state.matches} / ${this.state.totalPairs} Paare`;
-                this.state.selected = null; this.state.locked = false; this.save();
+                this.state.selected = null; this.state.locked = false;
+                
                 if(this.state.matches === this.state.totalPairs) setTimeout(() => {
                     if(confirm("Runde fertig! Weiter?")) this.startNewGame(this.state.mode);
                 }, 300);
             }, 300);
         } else {
+            // VISUALS
             c1.el.classList.add('error'); c2.el.classList.add('error');
-            this.data.vocab.find(v => v.russian === c1.data.ref.russian).errors++;
-            this.data.stats.totalErrors++; this.save();
+            
+            // DATEN UPDATE (Safe Block)
+            try {
+                let wordRef = this.data.vocab.find(v => v.russian === c1.data.ref.russian);
+                if(wordRef) {
+                    wordRef.box = 1;
+                    wordRef.errors = (wordRef.errors || 0) + 1;
+                    this.data.stats.totalErrors++;
+                    this.save();
+                }
+            } catch(e) { console.error("Error saving stats", e); }
+
+            // RESET (Garantiert)
             setTimeout(() => {
                 c1.el.classList.remove('selected','error'); c2.el.classList.remove('selected','error');
                 this.state.selected = null; this.state.locked = false;
@@ -319,6 +326,8 @@ const app = {
         document.getElementById('statRounds').textContent = this.data.stats.rounds;
         document.getElementById('statPairsFound').textContent = this.data.stats.pairsFound;
         document.getElementById('statErrors').textContent = this.data.stats.totalErrors;
+        document.getElementById('statMastered').textContent = this.data.vocab.filter(v => v.box === 5).length;
+        
         const weakCount = this.data.vocab.filter(v => v.errors > 0).length;
         document.getElementById('weakCountDisplay').textContent = `${weakCount} Wörter`;
         document.getElementById('btnStartWeak').style.opacity = weakCount ? 1 : 0.5;
@@ -330,13 +339,16 @@ const app = {
         this.data.vocab.filter(v => v.russian.toLowerCase().includes(q) || v.english.toLowerCase().includes(q))
             .slice(0, 50).forEach(v => {
                 const d = document.createElement('div'); d.className = 'vocab-item';
-                d.innerHTML = `<div><strong>${v.russian}</strong><br><small>${v.english}</small></div>` +
-                    (v.errors ? `<div style="background:var(--danger);color:#fff;padding:2px 8px;border-radius:8px;font-size:12px">${v.errors}</div>` : '');
+                const boxClass = v.box === 5 ? 'master' : '';
+                d.innerHTML = `
+                    <div><strong>${v.russian}</strong> <span class="box-badge ${boxClass}">Box ${v.box||0}</span><br><small>${v.english}</small></div>
+                    ${v.errors ? `<div style="background:var(--danger);color:#fff;padding:2px 8px;border-radius:8px;font-size:12px">${v.errors}</div>` : ''}
+                `;
                 list.appendChild(d);
             });
     },
-    resetStats() { if(confirm('Reset Stats?')) { this.data.stats={rounds:0,pairsFound:0,totalErrors:0}; this.data.vocab.forEach(v=>v.errors=0); this.save(); } },
-    hardReset() { if(confirm('Alles Löschen?')) { localStorage.removeItem('ru_trainer_500_v1'); location.reload(); } }
+    resetStats() { if(confirm('Lernfortschritt zurücksetzen?')) { this.data.stats={rounds:0,pairsFound:0,totalErrors:0}; this.data.vocab.forEach(v=>{v.errors=0; v.box=0;}); this.save(); } },
+    hardReset() { if(confirm('Alles Löschen?')) { localStorage.removeItem('ru_trainer_smart_v3_safe'); location.reload(); } }
 };
 document.addEventListener('DOMContentLoaded', () => app.init());
 </script>
