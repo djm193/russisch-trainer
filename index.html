@@ -3,164 +3,398 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Russisch Trainer V14 (Smart SRS)</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>Russisch Trainer V15</title>
     <style>
         :root {
-            --primary: #007AFF; --bg: #F2F2F7; --card: #FFF; --text: #1C1C1E; --sub: #8E8E93;
-            --danger: #FF3B30; --success: #34C759; --warning: #FF9500; --radius: 16px; 
-            --shadow: 0 2px 10px rgba(0,0,0,0.06); --gold: #FFB300;
+            --primary: #007AFF;
+            --bg: #F2F2F7;
+            --card: #FFFFFF;
+            --text: #1C1C1E;
+            --sub: #8E8E93;
+            --danger: #FF3B30;
+            --success: #34C759;
+            --warning: #FF9500;
+            --radius: 14px;
+            --shadow: 0 2px 6px rgba(0,0,0,0.06);
+            --gold: #FFB300;
         }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-        body {
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg);
+            color: var(--text);
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg); color: var(--text); margin: 0; padding: 0;
-            overscroll-behavior: none; height: 100vh; height: 100dvh; display: flex; flex-direction: column;
+            overscroll-behavior: none;
         }
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* IPHONE 16 PRO MAX SAFE-AREA NAVIGATION */
         .nav-tabs {
-            background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            height: 54px; display: flex; border-bottom: 1px solid rgba(0,0,0,0.08);
-            position: sticky; top: 0; z-index: 100; padding-top: env(safe-area-inset-top);
+            background: #FFFFFF;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            /* Safe-Area für Dynamic Island / Status Bar sauber addieren */
+            padding-top: max(12px, env(safe-area-inset-top));
+            padding-left: 8px;
+            padding-right: 8px;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            z-index: 200;
         }
-        .tab-btn { 
-            flex: 1; border: none; background: transparent; font-size: 15px; font-weight: 600; 
-            color: var(--sub); cursor: pointer; position: relative; transition: color 0.2s;
+        .tab-btn {
+            flex: 1;
+            height: 46px;
+            border: none;
+            background: transparent;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--sub);
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            padding: 0 4px;
         }
-        .tab-btn.active { color: var(--primary); }
+        .tab-btn.active {
+            color: var(--primary);
+            font-weight: 700;
+        }
         .tab-btn.active::after {
-            content: ''; position: absolute; bottom: 0; left: 25%; width: 50%; height: 3px;
-            background: var(--primary); border-radius: 3px 3px 0 0;
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 20%;
+            width: 60%;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 3px 3px 0 0;
         }
-        .badge { 
-            position: absolute; top: 8px; right: 14%; background: var(--danger); color: white; 
-            border-radius: 10px; padding: 2px 6px; font-size: 11px; font-weight: 700; 
+        .badge {
+            background: var(--danger);
+            color: white;
+            border-radius: 10px;
+            padding: 1px 6px;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.3;
         }
-        .content-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
-        .tab-content { display: none; height: 100%; flex-direction: column; padding: 16px; overflow-y: auto; }
-        .tab-content.active { display: flex; }
-        .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-shrink: 0; }
-        
+
+        /* CONTENT AREA */
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .tab-content {
+            display: none;
+            height: 100%;
+            flex-direction: column;
+            padding: 14px 16px calc(16px + env(safe-area-inset-bottom)) 16px;
+            overflow-y: auto;
+        }
+        .tab-content.active {
+            display: flex;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            flex-shrink: 0;
+            background: #FFF;
+            padding: 10px 14px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        /* KOMPAKTERE KARTEN FÜR ANGENEHMES TIPPEN */
         .game-grid {
-            display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(5, 1fr);
-            gap: 12px; flex: 1; height: 100%; padding-bottom: env(safe-area-inset-bottom);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-auto-rows: minmax(62px, 72px);
+            gap: 10px;
+            align-content: start;
+            width: 100%;
         }
         .card {
-            background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            text-align: center; cursor: pointer; position: relative; border: 2.5px solid transparent;
-            transition: transform 0.12s ease, border-color 0.15s ease, background-color 0.15s ease, opacity 0.25s ease;
-            touch-action: manipulation; height: 100%; width: 100%; padding: 8px;
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            text-align: center;
+            cursor: pointer;
+            position: relative;
+            border: 2px solid transparent;
+            transition: transform 0.1s ease, border-color 0.12s ease, background-color 0.12s ease, opacity 0.2s ease;
+            touch-action: manipulation;
+            padding: 6px 10px;
+            height: 100%;
+            width: 100%;
         }
-        .card:active { transform: scale(0.96); }
-        .card.selected { border-color: var(--primary); background-color: #EBF4FF; }
-        .card.matched { background-color: #E8F8ED; border-color: var(--success); opacity: 0.25; pointer-events: none; transform: scale(0.95); }
-        .card.error { background-color: var(--danger); border-color: var(--danger); animation: shake 0.4s; }
-        .card.error .card-text, .card.error .speaker-icon, .card.error .card-badge { color: white !important; }
-        
-        .card-text { font-size: clamp(15px, 2.1vh, 19px); font-weight: 600; line-height: 1.25; word-break: break-word; }
-        .speaker-icon { color: var(--sub); margin-top: 6px; width: 19px; height: 19px; flex-shrink: 0; }
-        .card.selected .speaker-icon { color: var(--primary); }
+        .card:active {
+            transform: scale(0.96);
+        }
+        .card.selected {
+            border-color: var(--primary);
+            background-color: #E8F2FF;
+        }
+        .card.matched {
+            background-color: #E5F9E7;
+            border-color: var(--success);
+            opacity: 0.2;
+            pointer-events: none;
+            transform: scale(0.95);
+        }
+        .card.error {
+            background-color: var(--danger);
+            border-color: var(--danger);
+            animation: shake 0.35s;
+        }
+        .card.error .card-text,
+        .card.error .speaker-icon,
+        .card.error .card-badge {
+            color: #FFF !important;
+        }
+        .card-text {
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 1.2;
+            word-break: break-word;
+        }
+        .speaker-icon {
+            color: var(--sub);
+            width: 17px;
+            height: 17px;
+            flex-shrink: 0;
+        }
+        .card.selected .speaker-icon {
+            color: var(--primary);
+        }
         .card-badge {
-            position: absolute; top: 6px; right: 8px; font-size: 10px; font-weight: 700;
-            color: var(--danger); opacity: 0.85;
+            position: absolute;
+            top: 4px;
+            right: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--danger);
         }
 
-        .btn { 
-            background: var(--primary); color: white; border: none; padding: 9px 18px; 
-            border-radius: 20px; font-weight: 600; font-size: 14px; cursor: pointer;
-            transition: opacity 0.2s, transform 0.1s;
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 18px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
         }
-        .btn:active { transform: scale(0.96); }
-        
-        .vocab-item { padding: 12px 14px; border-bottom: 1px solid #EFEFF4; display: flex; justify-content: space-between; align-items: center; background: white; }
-        .vocab-list { background: white; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
-        .box-badge { font-size: 11px; padding: 2px 7px; border-radius: 6px; background: #EFEFF4; color: #666; margin-left: 6px; font-weight: 600; }
-        .box-badge.master { background: var(--gold); color: #fff; }
+        .btn:active {
+            opacity: 0.8;
+        }
 
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .stat-card { background: white; padding: 18px 14px; border-radius: var(--radius); text-align: center; box-shadow: var(--shadow); }
-        .stat-num { font-size: 28px; font-weight: 700; display: block; margin-bottom: 4px; }
-        
+        /* VOKABELLISTE */
+        .vocab-list {
+            background: white;
+            border-radius: var(--radius);
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+            flex: 1;
+        }
+        .vocab-item {
+            padding: 11px 14px;
+            border-bottom: 1px solid #EFEFF4;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+        }
+        .box-badge {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 6px;
+            background: #EFEFF4;
+            color: #666;
+            margin-left: 6px;
+            font-weight: 600;
+        }
+        .box-badge.master {
+            background: var(--gold);
+            color: #fff;
+        }
+
+        /* PROFIL / STATISTIKEN */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .stat-card {
+            background: white;
+            padding: 16px 12px;
+            border-radius: var(--radius);
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+        .stat-num {
+            font-size: 26px;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* TOAST FEEDBACK */
         #toast {
-            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(10px);
-            background: rgba(28,28,30,0.92); color: white; padding: 10px 20px; border-radius: 24px;
-            font-size: 14px; font-weight: 500; pointer-events: none; opacity: 0; 
-            transition: opacity 0.25s, transform 0.25s; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: fixed;
+            bottom: calc(24px + env(safe-area-inset-bottom));
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            background: rgba(28,28,30,0.92);
+            color: white;
+            padding: 9px 18px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            z-index: 999;
             white-space: nowrap;
         }
-        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        #toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
 
-        @keyframes shake { 0%,100% {transform:translateX(0)} 25% {transform:translateX(-6px)} 75% {transform:translateX(6px)} }
-        @keyframes fadeIn { from {opacity:0;transform:scale(0.94)} to {opacity:1;transform:scale(1)} }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
     </style>
 </head>
 <body>
+
 <nav class="nav-tabs">
     <button class="tab-btn active" onclick="app.switchTab('game')">Spiel</button>
-    <button class="tab-btn" onclick="app.switchTab('weak')">Training<span id="weakBadge" class="badge" style="display:none">0</span></button>
+    <button class="tab-btn" onclick="app.switchTab('weak')">
+        Training <span id="weakBadge" class="badge" style="display:none">0</span>
+    </button>
     <button class="tab-btn" onclick="app.switchTab('manage')">Liste</button>
     <button class="tab-btn" onclick="app.switchTab('stats')">Profil</button>
 </nav>
 
 <div class="content-area">
-    <!-- SPIEL TAB -->
+    <!-- TAB 1: SPIEL -->
     <div id="tab-game" class="tab-content active">
         <div class="game-header">
             <div>
-                <div style="color:var(--text); font-weight:700; font-size:15px" id="gameProgress">0 / 5 Paare</div>
-                <div style="color:var(--sub); font-size:12px" id="roundSubtext">Smart-Mix aktiv</div>
+                <div style="font-weight:700; font-size:15px" id="gameProgress">0 / 5 Paare</div>
+                <div style="color:var(--sub); font-size:12px" id="roundSubtext">Runde 1 • V15 Smart-SRS</div>
             </div>
-            <button class="btn" onclick="app.startNewGame('normal')">Neue Runde ↻</button>
+            <button class="btn" onclick="app.startNewGame('normal')">Überspringen ↻</button>
         </div>
         <div id="gameBoard" class="game-grid"></div>
     </div>
 
-    <!-- FEHLER-TRAINING TAB -->
+    <!-- TAB 2: FEHLER-TRAINING -->
     <div id="tab-weak" class="tab-content">
         <div class="game-header">
             <div>
-                <strong>Gezieltes Fehler-Training</strong><br>
-                <span style="color:var(--sub); font-size:13px" id="weakCountDisplay">0 Wörter mit Fehlern</span>
+                <div style="font-weight:700; font-size:15px">Fehler-Training</div>
+                <div style="color:var(--sub); font-size:12px" id="weakCountDisplay">0 Wörter mit Fehlern</div>
             </div>
-            <button class="btn" id="btnStartWeak" onclick="app.startNewGame('weak')">Training starten ▶</button>
+            <button class="btn" id="btnStartWeak" onclick="app.startNewGame('weak')">Starten ▶</button>
         </div>
-        <div id="weakBoard" class="game-grid" style="border: 2px dashed #D1D1D6; border-radius: 16px; display:flex; justify-content:center; align-items:center; color:#8E8E93; text-align:center; padding:20px">
-            Wörter, die du verwechselst,<br>landen automatisch hier zum Üben.
+        <div id="weakBoard" class="game-grid"></div>
+        <div id="weakEmptyHint" style="border: 2px dashed #D1D1D6; border-radius: 14px; padding: 30px 20px; text-align: center; color: var(--sub); font-size: 14px; margin-top: 10px;">
+            Sobald du im Spiel ein Wortpaar verwechselst, wird es hier gespeichert und kann gezielt geübt werden.
         </div>
     </div>
 
-    <!-- VOKABELLISTE TAB -->
+    <!-- TAB 3: LISTE -->
     <div id="tab-manage" class="tab-content">
-        <div style="display:flex; gap:8px; margin-bottom:12px; flex-shrink:0;">
-            <input type="text" id="searchInput" placeholder="Russisch oder Englisch suchen..." style="flex:1; padding:12px 14px; border:none; background:#E5E5EA; border-radius:12px; font-size:15px;" oninput="app.renderVocabList()">
-            <select id="filterSelect" onchange="app.renderVocabList()" style="padding:0 12px; border:none; background:#fff; border-radius:12px; font-weight:600; font-size:13px; color:var(--text);">
-                <option value="all">Alle</option>
+        <div style="display:flex; gap:8px; margin-bottom:10px; flex-shrink:0;">
+            <input type="text" id="searchInput" placeholder="Wort suchen..." style="flex:1; padding:10px 12px; border:none; background:#E5E5EA; border-radius:10px; font-size:14px;" oninput="app.renderVocabList()">
+            <select id="filterSelect" onchange="app.renderVocabList()" style="padding:0 10px; border:none; background:#FFF; border-radius:10px; font-weight:600; font-size:13px; color:var(--text);">
+                <option value="all">Alle (Fehler zuerst)</option>
                 <option value="errors">Nur Fehler</option>
-                <option value="unseen">Noch neu (Box 0)</option>
                 <option value="master">Meister (Box 5)</option>
             </select>
         </div>
-        <div class="vocab-list" id="vocabListContainer" style="overflow-y:auto;"></div>
+        <div class="vocab-list" id="vocabListContainer"></div>
     </div>
 
-    <!-- PROFIL / STATS TAB -->
+    <!-- TAB 4: PROFIL -->
     <div id="tab-stats" class="tab-content">
         <div class="stats-grid">
-            <div class="stat-card"><span class="stat-num" style="color:var(--primary)" id="statTotalWords">0</span><span style="font-size:12px;color:var(--sub);font-weight:600">VOKABELN (UNIKATE)</span></div>
-            <div class="stat-card"><span class="stat-num" style="color:var(--gold)" id="statMastered">0</span><span style="font-size:12px;color:var(--sub);font-weight:600">MEISTER (BOX 5)</span></div>
-            <div class="stat-card"><span class="stat-num" style="color:var(--success)" id="statPairsFound">0</span><span style="font-size:12px;color:var(--sub);font-weight:600">PAARE GELÖST</span></div>
-            <div class="stat-card"><span class="stat-num" style="color:var(--danger)" id="statErrors">0</span><span style="font-size:12px;color:var(--sub);font-weight:600">FEHLVERSUCHE</span></div>
+            <div class="stat-card">
+                <span class="stat-num" style="color:var(--primary)" id="statTotalWords">0</span>
+                <span style="font-size:11px;color:var(--sub);font-weight:600">VOKABELN GESAMT</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-num" style="color:var(--gold)" id="statMastered">0</span>
+                <span style="font-size:11px;color:var(--sub);font-weight:600">MEISTER (BOX 5)</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-num" style="color:var(--success)" id="statRounds">0</span>
+                <span style="font-size:11px;color:var(--sub);font-weight:600">RUNDEN GESPIELT</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-num" style="color:var(--danger)" id="statErrors">0</span>
+                <span style="font-size:11px;color:var(--sub);font-weight:600">FEHLER GESAMT</span>
+            </div>
         </div>
-        <div class="stat-card" style="margin-top:12px; display:flex; justify-content:space-around; align-items:center; padding:14px">
-            <div><span style="font-size:12px;color:var(--sub);font-weight:600">GESPIELTE RUNDEN</span><strong style="display:block;font-size:20px;margin-top:2px" id="statRounds">0</strong></div>
+
+        <div class="stat-card" style="margin-top:10px; display:flex; justify-content:space-around; align-items:center; padding:14px">
+            <div>
+                <span style="font-size:11px;color:var(--sub);font-weight:600">GELÖSTE PAARE</span>
+                <strong style="display:block;font-size:20px;margin-top:2px;color:var(--text)" id="statPairsFound">0</strong>
+            </div>
             <div style="height:30px;width:1px;background:#E5E5EA"></div>
-            <div><span style="font-size:12px;color:var(--sub);font-weight:600">OFFENE PROBLEM-WÖRTER</span><strong style="display:block;font-size:20px;margin-top:2px;color:var(--warning)" id="statOpenWeak">0</strong></div>
+            <div>
+                <span style="font-size:11px;color:var(--sub);font-weight:600">AKTUELLE FEHLER-WÖRTER</span>
+                <strong style="display:block;font-size:20px;margin-top:2px;color:var(--danger)" id="statOpenWeak">0</strong>
+            </div>
         </div>
-        <div style="margin-top:auto; gap:10px; display:flex; flex-direction:column; padding-top:20px">
+
+        <div style="margin-top:auto; gap:10px; display:flex; flex-direction:column; padding-top:16px">
             <button class="btn" style="background:#8E8E93; padding:12px" onclick="app.resetStats()">Lernfortschritt zurücksetzen</button>
             <button class="btn" style="background:var(--danger); padding:12px" onclick="app.hardReset()">Kompletten Speicher löschen</button>
         </div>
     </div>
 </div>
+
 <div id="toast"></div>
 
 <script>
@@ -229,74 +463,85 @@ const RAW_VOCAB = [
 ["жестокий","cruel"],["жадный","greedy"],["щедрый","generous"],["вежливый","polite"],["грубый","rude"],["внимательный","attentive"],["осторожный","careful"],["аккуратный","neat"],["ленивый","lazy"],["трудолюбивый","hardworking"]
 ];
 
-const STORAGE_KEY = 'ru_trainer_v14_smart';
-const LEGACY_KEY = 'ru_trainer_v13_hardened';
+const STORAGE_KEY = 'ru_trainer_v15_pro';
+const OLD_KEYS = ['ru_trainer_v14_smart', 'ru_trainer_v13_hardened'];
 
 const app = {
-    data: { 
-        vocab: [], 
-        stats: { rounds: 0, pairsFound: 0, totalErrors: 0 } 
+    data: {
+        vocab: [],
+        stats: { rounds: 0, pairsFound: 0, totalErrors: 0 }
     },
-    state: { 
-        cards: [], 
-        selected: null, 
-        locked: false, 
-        matches: 0, 
-        totalPairs: 0, 
+    state: {
+        cards: [],
+        selected: null,
+        locked: false,
+        matches: 0,
+        totalPairs: 0,
         mode: 'normal',
-        recentMistakes: [], // Merkt sich Wörter, die kürzlich falsch waren
         toastTimer: null
     },
 
     init() {
-        const stored = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_KEY);
-        let savedStats = {};
+        let rawStored = localStorage.getItem(STORAGE_KEY);
+        if (!rawStored) {
+            for (const k of OLD_KEYS) {
+                if (localStorage.getItem(k)) {
+                    rawStored = localStorage.getItem(k);
+                    break;
+                }
+            }
+        }
 
-        if (stored) {
+        let savedMap = {};
+        if (rawStored) {
             try {
-                const parsed = JSON.parse(stored);
+                const parsed = JSON.parse(rawStored);
                 this.data.stats = {
-                    rounds: parsed.stats?.rounds || 0,
-                    pairsFound: parsed.stats?.pairsFound || 0,
-                    totalErrors: parsed.stats?.totalErrors || 0
+                    rounds: Number(parsed.stats?.rounds) || 0,
+                    pairsFound: Number(parsed.stats?.pairsFound) || 0,
+                    totalErrors: Number(parsed.stats?.totalErrors) || 0
                 };
                 if (Array.isArray(parsed.vocab)) {
                     parsed.vocab.forEach(v => {
-                        if (v.russian) {
-                            savedStats[v.russian.trim()] = {
-                                errors: v.errors || 0,
-                                box: v.box || 0,
-                                lastSeen: v.lastSeen || 0,
-                                lastErrorRound: v.lastErrorRound || 0
+                        if (v && v.russian) {
+                            savedMap[String(v.russian).trim()] = {
+                                errors: Number(v.errors) || 0,
+                                box: Number(v.box) || 0,
+                                lastSeen: Number(v.lastSeen) || 0,
+                                lastErrorRound: Number(v.lastErrorRound) || 0
                             };
                         }
                     });
                 }
             } catch (e) {
-                console.warn('Fehler beim Laden alter Daten:', e);
+                console.warn('Fehler beim Laden:', e);
             }
         }
 
-        // Deduplizierung + Initialisierung
         const seen = new Set();
         this.data.vocab = [];
-
-        RAW_VOCAB.forEach(p => {
-            const ru = String(p[0]).trim();
-            const en = String(p[1]).trim();
+        RAW_VOCAB.forEach(pair => {
+            const ru = String(pair[0]).trim();
+            const en = String(pair[1]).trim();
             if (!seen.has(ru)) {
                 seen.add(ru);
-                const st = savedStats[ru] || { errors: 0, box: 0, lastSeen: 0, lastErrorRound: 0 };
+                const prev = savedMap[ru] || { errors: 0, box: 0, lastSeen: 0, lastErrorRound: 0 };
                 this.data.vocab.push({
                     russian: ru,
                     english: en,
-                    errors: st.errors,
-                    box: st.box,
-                    lastSeen: st.lastSeen,
-                    lastErrorRound: st.lastErrorRound
+                    errors: prev.errors,
+                    box: prev.box,
+                    lastSeen: prev.lastSeen,
+                    lastErrorRound: prev.lastErrorRound
                 });
             }
         });
+
+        // Falls totalErrors durch den alten Bug auf 0 hing, aber Wörter Fehler haben, synchronisieren:
+        const sumWordErrors = this.data.vocab.reduce((acc, v) => acc + (v.errors || 0), 0);
+        if (this.data.stats.totalErrors < sumWordErrors) {
+            this.data.stats.totalErrors = sumWordErrors;
+        }
 
         this.save();
         this.startNewGame('normal');
@@ -306,7 +551,7 @@ const app = {
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
         } catch (e) {
-            console.warn('Speichern fehlgeschlagen:', e);
+            console.error('Save error:', e);
         }
         this.updateUI();
     },
@@ -317,7 +562,7 @@ const app = {
         t.textContent = msg;
         t.classList.add('show');
         clearTimeout(this.state.toastTimer);
-        this.state.toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+        this.state.toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
     },
 
     speak(text) {
@@ -336,16 +581,21 @@ const app = {
         document.querySelectorAll('.tab-btn, .tab-content').forEach(e => e.classList.remove('active'));
         const idx = tabs.indexOf(id);
         if (idx !== -1) document.querySelectorAll('.tab-btn')[idx].classList.add('active');
-        const content = document.getElementById('tab-' + id);
-        if (content) content.classList.add('active');
-        
+        const target = document.getElementById('tab-' + id);
+        if (target) target.classList.add('active');
+
         this.updateUI();
         if (id === 'manage') this.renderVocabList();
+        if (id === 'weak') {
+            const hasErrors = this.data.vocab.some(v => v.errors > 0);
+            if (hasErrors && this.state.mode !== 'weak') {
+                this.startNewGame('weak');
+            }
+        }
     },
 
-    // Smart-Algorithmus: Mischt fällige Fehler, neue Wörter und Wiederholungen ohne Endlosschleifen
     pickSmartSelection(count = 5) {
-        const currentRound = this.data.stats.rounds + 1;
+        const nextRound = this.data.stats.rounds + 1;
         const all = [...this.data.vocab];
         const chosen = [];
         const chosenSet = new Set();
@@ -357,33 +607,30 @@ const app = {
             }
         };
 
-        // 1. Bis zu 2 Problemwörter holen (bevorzugt solche, die mindestens 1 Runde Pause hatten)
-        const errorPool = all.filter(v => v.errors > 0).sort((a, b) => {
-            const cooldownA = (currentRound - (a.lastSeen || 0)) >= 2 ? 1 : 0;
-            const cooldownB = (currentRound - (b.lastSeen || 0)) >= 2 ? 1 : 0;
-            if (cooldownB !== cooldownA) return cooldownB - cooldownA;
+        // 1. Bis zu 2 Fehler-Wörter einstreuen (bevorzugt solche, die mindestens 1 Runde Pause hatten)
+        const errorWords = all.filter(v => v.errors > 0).sort((a, b) => {
+            const pauseA = (nextRound - (a.lastSeen || 0)) >= 2 ? 1 : 0;
+            const pauseB = (nextRound - (b.lastSeen || 0)) >= 2 ? 1 : 0;
+            if (pauseB !== pauseA) return pauseB - pauseA;
             return b.errors - a.errors;
         });
-        errorPool.slice(0, 2).forEach(addWord);
+        errorWords.slice(0, 2).forEach(addWord);
 
-        // 2. Restliche Plätze mit gewichteter Spaced-Repetition-Formel füllen
-        const remaining = all.filter(v => !chosenSet.has(v.russian));
-        remaining.forEach(v => {
-            const roundsSinceSeen = currentRound - (v.lastSeen || 0);
-            // Cooldown-Malus: Wenn das Wort gerade erst in der letzten Runde dran war, stark abwerten
-            const recencyPenalty = (v.lastSeen > 0 && roundsSinceSeen <= 2) ? -500 : Math.min(roundsSinceSeen * 12, 180);
-            // Box-Gewichtung: Box 1-2 (in Arbeit) leicht vor Box 0 (ganz neu), Box 5 (Meister) selten
-            const boxWeight = v.box === 0 ? 140 : (6 - v.box) * 45;
-            const errorBonus = v.errors * 90;
-            v._score = boxWeight + errorBonus + recencyPenalty + (Math.random() * 65);
+        // 2. Restliche Plätze auffüllen (keine direkten Wiederholungen aus der Vorrunde)
+        const rest = all.filter(v => !chosenSet.has(v.russian));
+        rest.forEach(v => {
+            const since = nextRound - (v.lastSeen || 0);
+            const cooldownPenalty = (v.lastSeen > 0 && since <= 2) ? -600 : Math.min(since * 10, 150);
+            const boxPriority = v.box === 0 ? 130 : (6 - v.box) * 40;
+            const errBonus = (v.errors || 0) * 85;
+            v._score = boxPriority + errBonus + cooldownPenalty + (Math.random() * 60);
         });
 
-        remaining.sort((a, b) => b._score - a._score);
-        for (const w of remaining) {
+        rest.sort((a, b) => b._score - a._score);
+        for (const w of rest) {
             if (chosen.length >= count) break;
             addWord(w);
         }
-
         return chosen;
     },
 
@@ -393,24 +640,20 @@ const app = {
         this.state.selected = null;
         this.state.locked = false;
 
-        const currentRound = this.data.stats.rounds + 1;
         let selection = [];
+        const weakBoard = document.getElementById('weakBoard');
+        const weakHint = document.getElementById('weakEmptyHint');
 
         if (mode === 'weak') {
-            let pool = this.data.vocab.filter(v => v.errors > 0);
+            const pool = this.data.vocab.filter(v => v.errors > 0);
             if (pool.length === 0) {
-                this.showToast("Super! Aktuell keine offenen Fehler.");
-                const weakBoard = document.getElementById('weakBoard');
-                weakBoard.style.display = 'flex';
-                weakBoard.innerHTML = '🎉 Keine Fehler vorhanden!<br>Spiele im normalen Modus weiter.';
+                if (weakBoard) weakBoard.innerHTML = '';
+                if (weakHint) weakHint.style.display = 'block';
+                this.showToast('Keine offenen Fehler vorhanden!');
                 return;
             }
-            // Auch im Fehlermodus: Wörter rotieren lassen statt immer nur dieselben 5
-            pool.sort((a, b) => {
-                const ageA = currentRound - (a.lastSeen || 0);
-                const ageB = currentRound - (b.lastSeen || 0);
-                return (b.errors * 30 + ageB * 25 + Math.random() * 20) - (a.errors * 30 + ageA * 25 + Math.random() * 20);
-            });
+            if (weakHint) weakHint.style.display = 'none';
+            pool.sort((a, b) => (b.errors * 25 + Math.random() * 20) - (a.errors * 25 + Math.random() * 20));
             selection = pool.slice(0, Math.min(5, pool.length));
         } else {
             selection = this.pickSmartSelection(5);
@@ -418,76 +661,73 @@ const app = {
         }
 
         this.state.totalPairs = selection.length;
-
-        // Markiere ausgewählte Wörter als in dieser Runde gesehen
         selection.forEach(w => { w.lastSeen = this.data.stats.rounds; });
 
-        const ru = selection.map(w => ({ text: w.russian, type: 'ru', pairId: w.russian, errors: w.errors }));
-        const en = selection.map(w => ({ text: w.english, type: 'en', pairId: w.russian, errors: w.errors }));
+        const ruCards = selection.map(w => ({ text: w.russian, type: 'ru', pairId: w.russian, errors: w.errors }));
+        const enCards = selection.map(w => ({ text: w.english, type: 'en', pairId: w.russian, errors: w.errors }));
 
-        // Echter Fisher-Yates Shuffle
         const shuffle = (arr) => {
             for (let i = arr.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [arr[i], arr[j]] = [arr[j], arr[i]];
             }
         };
-        shuffle(ru);
-        shuffle(en);
+        shuffle(ruCards);
+        shuffle(enCards);
 
         this.state.cards = [];
         for (let i = 0; i < this.state.totalPairs; i++) {
-            this.state.cards.push(ru[i]);
-            this.state.cards.push(en[i]);
+            this.state.cards.push(ruCards[i]);
+            this.state.cards.push(enCards[i]);
         }
 
-        const board = document.getElementById(mode === 'weak' ? 'weakBoard' : 'gameBoard');
-        if (mode === 'weak') board.style.display = 'grid';
-        this.renderBoard(board);
+        const container = document.getElementById(mode === 'weak' ? 'weakBoard' : 'gameBoard');
+        this.renderBoard(container);
 
-        const errInRound = selection.filter(w => w.errors > 0).length;
-        document.getElementById('gameProgress').textContent = `0 / ${this.state.totalPairs} Paare`;
-        const sub = document.getElementById('roundSubtext');
-        if (sub) {
-            sub.textContent = errInRound > 0 
-                ? `Inkl. ${errInRound} Wiederholungs-${errInRound === 1 ? 'Wort' : 'Wörtern'}`
-                : `Runde ${this.data.stats.rounds} • Neue & fällige Wörter`;
+        if (mode === 'normal') {
+            document.getElementById('gameProgress').textContent = `0 / ${this.state.totalPairs} Paare`;
+            const errCount = selection.filter(w => w.errors > 0).length;
+            document.getElementById('roundSubtext').textContent = errCount > 0
+                ? `Runde ${this.data.stats.rounds} • ${errCount} Fehler-Wort dabei`
+                : `Runde ${this.data.stats.rounds} • V15 Smart-SRS`;
         }
 
         this.save();
     },
 
     renderBoard(container) {
+        if (!container) return;
         container.innerHTML = '';
-        this.state.cards.forEach((c, i) => {
+        this.state.cards.forEach((c, idx) => {
             const el = document.createElement('div');
             el.className = 'card';
-            el.style.animation = `fadeIn 0.25s ease backwards ${i * 0.03}s`;
-            
-            const errorDot = (c.errors > 0 && c.type === 'ru') 
-                ? `<span class="card-badge">★ ${c.errors}</span>` 
+            el.style.animation = `fadeIn 0.2s ease backwards ${idx * 0.025}s`;
+
+            const badge = (c.type === 'ru' && c.errors > 0)
+                ? `<span class="card-badge">${c.errors}×</span>`
                 : '';
 
-            el.innerHTML = errorDot + `<div class="card-text">${c.text}</div>` +
-                (c.type === 'ru' ? `<svg class="speaker-icon" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>` : '');
-            
-            el.onclick = () => this.handleCardClick(el, c);
+            const speaker = c.type === 'ru'
+                ? `<svg class="speaker-icon" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`
+                : '';
+
+            el.innerHTML = `${badge}<div class="card-text">${c.text}</div>${speaker}`;
+            el.onclick = () => this.handleCardTap(el, c);
             container.appendChild(el);
         });
     },
 
-    handleCardClick(el, c) {
+    handleCardTap(el, c) {
         if (c.type === 'ru') this.speak(c.text);
         if (this.state.locked || el.classList.contains('matched')) return;
 
-        // Klick auf dieselbe Karte hebt Auswahl wieder auf
         if (this.state.selected?.el === el) {
             el.classList.remove('selected');
             this.state.selected = null;
             return;
         }
 
-        // Klick auf eine Karte derselben Spalte/Sprache wechselt einfach die Auswahl (kein Fehler!)
+        // Gleiche Sprache nochmal getippt -> Auswahl wechseln statt Fehler
         if (this.state.selected && this.state.selected.data.type === c.type) {
             this.state.selected.el.classList.remove('selected');
             el.classList.add('selected');
@@ -517,77 +757,80 @@ const app = {
                 this.state.locked = false;
                 this.data.stats.pairsFound++;
 
-                document.getElementById('gameProgress').textContent = `${this.state.matches} / ${this.state.totalPairs} Paare`;
+                if (this.state.mode === 'normal') {
+                    document.getElementById('gameProgress').textContent = `${this.state.matches} / ${this.state.totalPairs} Paare`;
+                }
 
-                const w = this.data.vocab.find(v => v.russian === c1.data.pairId);
-                if (w) {
-                    // War das Wort nicht gerade in derselben Runde falsch? Dann Box hoch & Fehler abbauen
-                    if (w.lastErrorRound !== this.data.stats.rounds) {
-                        w.box = Math.min(5, (w.box || 0) + 1);
-                        if (w.errors > 0) w.errors--;
+                const wordObj = this.data.vocab.find(v => v.russian === c1.data.pairId);
+                if (wordObj) {
+                    // Nur hochstufen und Fehler abbauen, wenn es nicht in genau dieser Runde falsch war
+                    if (wordObj.lastErrorRound !== this.data.stats.rounds) {
+                        wordObj.box = Math.min(5, (wordObj.box || 0) + 1);
+                        if (wordObj.errors > 0) wordObj.errors--;
                     }
                 }
                 this.save();
 
-                if (this.state.matches === this.state.totalPairs) {
-                    this.showToast("Runde geschafft! Nächste Runde lädt...");
-                    setTimeout(() => this.startNewGame(this.state.mode), 1100);
+                // AUTOMATISCHER WEITERLEITUNGS-FLOW OHNE KLICK
+                if (this.state.matches >= this.state.totalPairs) {
+                    this.showToast('5/5 gelöst – Nächste Runde!');
+                    setTimeout(() => {
+                        this.startNewGame(this.state.mode);
+                    }, 650);
                 }
-            }, 220);
+            }, 180);
         } else {
-            c1.el.classList.add('error');
-            c2.el.classList.add('error');
-            this.showToast("Verwechselt – für Wiederholung gemerkt!");
+            c1.el?.classList.add('error');
+            c2.el?.classList.add('error');
 
+            // Fehler sofort auf beide beteiligten Wortpaare buchen
             const w1 = this.data.vocab.find(v => v.russian === c1.data.pairId);
             const w2 = this.data.vocab.find(v => v.russian === c2.data.pairId);
 
             [w1, w2].forEach(w => {
                 if (w) {
-                    w.errors = (w.errors || 0) + 1;
+                    w.errors = (Number(w.errors) || 0) + 1;
                     w.box = 1;
                     w.lastErrorRound = this.data.stats.rounds;
                 }
             });
 
-            this.data.stats.totalErrors++;
+            this.data.stats.totalErrors = (Number(this.data.stats.totalErrors) || 0) + 1;
             this.save();
+            this.showToast(`Fehler gespeichert (${this.data.stats.totalErrors} gesamt)`);
 
             setTimeout(() => {
                 c1.el?.classList.remove('selected', 'error');
                 c2.el?.classList.remove('selected', 'error');
                 this.state.selected = null;
                 this.state.locked = false;
-            }, 700);
+            }, 600);
         }
     },
 
     updateUI() {
         const total = this.data.vocab.length;
-        const errorWords = this.data.vocab.filter(v => v.errors > 0).length;
+        const weakWords = this.data.vocab.filter(v => (v.errors || 0) > 0).length;
         const mastered = this.data.vocab.filter(v => v.box === 5).length;
 
-        const setTxt = (id, val) => {
+        const setEl = (id, val) => {
             const el = document.getElementById(id);
             if (el) el.textContent = val;
         };
 
-        setTxt('statTotalWords', total);
-        setTxt('statRounds', this.data.stats.rounds);
-        setTxt('statPairsFound', this.data.stats.pairsFound);
-        setTxt('statErrors', this.data.stats.totalErrors);
-        setTxt('statMastered', mastered);
-        setTxt('statOpenWeak', errorWords);
-        setTxt('weakCountDisplay', `${errorWords} ${errorWords === 1 ? 'Wort' : 'Wörter'} zum Wiederholen`);
-
-        const btnWeak = document.getElementById('btnStartWeak');
-        if (btnWeak) btnWeak.style.opacity = errorWords > 0 ? '1' : '0.4';
+        setEl('statTotalWords', total);
+        setEl('statMastered', mastered);
+        setEl('statRounds', this.data.stats.rounds);
+        setEl('statErrors', this.data.stats.totalErrors);
+        setEl('statPairsFound', this.data.stats.pairsFound);
+        setEl('statOpenWeak', weakWords);
+        setEl('weakCountDisplay', `${weakWords} ${weakWords === 1 ? 'Wort' : 'Wörter'} mit Fehlern`);
 
         const badge = document.getElementById('weakBadge');
         if (badge) {
-            if (errorWords > 0) {
-                badge.textContent = errorWords;
-                badge.style.display = 'block';
+            if (weakWords > 0) {
+                badge.textContent = weakWords;
+                badge.style.display = 'inline-block';
             } else {
                 badge.style.display = 'none';
             }
@@ -601,26 +844,36 @@ const app = {
         if (!list) return;
         list.innerHTML = '';
 
-        let filtered = this.data.vocab.filter(v => 
+        let items = this.data.vocab.filter(v =>
             v.russian.toLowerCase().includes(q) || v.english.toLowerCase().includes(q)
         );
 
-        if (filter === 'errors') filtered = filtered.filter(v => v.errors > 0).sort((a,b) => b.errors - a.errors);
-        else if (filter === 'unseen') filtered = filtered.filter(v => !v.box || v.box === 0);
-        else if (filter === 'master') filtered = filtered.filter(v => v.box === 5);
+        if (filter === 'errors') {
+            items = items.filter(v => v.errors > 0);
+        } else if (filter === 'master') {
+            items = items.filter(v => v.box === 5);
+        }
 
-        filtered.slice(0, 80).forEach(v => {
-            const d = document.createElement('div');
-            d.className = 'vocab-item';
+        // Standardmäßig Wörter mit Fehlern immer ganz oben anzeigen!
+        items.sort((a, b) => (b.errors || 0) - (a.errors || 0));
+
+        if (items.length === 0) {
+            list.innerHTML = `<div style="padding:24px;text-align:center;color:var(--sub)">Keine Einträge gefunden.</div>`;
+            return;
+        }
+
+        items.slice(0, 100).forEach(v => {
+            const row = document.createElement('div');
+            row.className = 'vocab-item';
             const boxClass = v.box === 5 ? 'master' : '';
-            d.innerHTML = `
+            row.innerHTML = `
                 <div onclick="app.speak('${v.russian.replace(/'/g, "\\'")}')" style="cursor:pointer; flex:1">
                     <strong>${v.russian}</strong> 🔊 <span class="box-badge ${boxClass}">Box ${v.box || 0}</span><br>
                     <small style="color:var(--sub)">${v.english}</small>
                 </div>
-                ${v.errors ? `<div style="background:var(--danger);color:#fff;padding:3px 9px;border-radius:10px;font-size:12px;font-weight:600">${v.errors}× falsch</div>` : ''}
+                ${v.errors > 0 ? `<div style="background:var(--danger);color:#fff;padding:4px 9px;border-radius:10px;font-size:12px;font-weight:700">${v.errors}× falsch</div>` : ''}
             `;
-            list.appendChild(d);
+            list.appendChild(row);
         });
     },
 
@@ -635,9 +888,9 @@ const app = {
     },
 
     hardReset() {
-        if (confirm('Alle gespeicherten Daten unwiderruflich löschen?')) {
+        if (confirm('Kompletten Speicher löschen und App neu laden?')) {
             localStorage.removeItem(STORAGE_KEY);
-            localStorage.removeItem(LEGACY_KEY);
+            OLD_KEYS.forEach(k => localStorage.removeItem(k));
             location.reload();
         }
     }
