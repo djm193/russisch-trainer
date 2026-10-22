@@ -2,10 +2,13 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>Russisch Trainer V15</title>
+    <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1C1C1E" media="(prefers-color-scheme: dark)">
+    <title>Russisch Trainer V16</title>
     <style>
         :root {
             --primary: #007AFF;
@@ -15,16 +18,40 @@
             --sub: #8E8E93;
             --danger: #FF3B30;
             --success: #34C759;
-            --warning: #FF9500;
+            --gold: #FFB300;
+            --field: #E5E5EA;
+            --line: #EFEFF4;
+            --selected-bg: #E8F2FF;
+            --matched-bg: #E5F9E7;
             --radius: 14px;
             --shadow: 0 2px 6px rgba(0,0,0,0.06);
-            --gold: #FFB300;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #0A84FF;
+                --bg: #000000;
+                --card: #1C1C1E;
+                --text: #F2F2F7;
+                --sub: #98989F;
+                --danger: #FF453A;
+                --success: #30D158;
+                --field: #2C2C2E;
+                --line: #2C2C2E;
+                --selected-bg: #0A2A4D;
+                --matched-bg: #0F3D1C;
+                --shadow: none;
+            }
         }
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
             -webkit-user-select: none;
+        }
+        input, select {
+            user-select: text;
+            -webkit-user-select: text;
+            font-size: 16px; /* verhindert Auto-Zoom auf iOS */
         }
         html, body {
             margin: 0;
@@ -36,17 +63,17 @@
             color: var(--text);
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
             overscroll-behavior: none;
+            touch-action: manipulation;
         }
         body {
             display: flex;
             flex-direction: column;
         }
 
-        /* IPHONE 16 PRO MAX SAFE-AREA NAVIGATION */
+        /* NAVIGATION MIT SAFE-AREA */
         .nav-tabs {
-            background: #FFFFFF;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
-            /* Safe-Area für Dynamic Island / Status Bar sauber addieren */
+            background: var(--card);
+            border-bottom: 1px solid var(--line);
             padding-top: max(12px, env(safe-area-inset-top));
             padding-left: 8px;
             padding-right: 8px;
@@ -60,6 +87,7 @@
             height: 46px;
             border: none;
             background: transparent;
+            font: inherit;
             font-size: 15px;
             font-weight: 600;
             color: var(--sub);
@@ -95,7 +123,7 @@
             line-height: 1.3;
         }
 
-        /* CONTENT AREA */
+        /* CONTENT */
         .content-area {
             flex: 1;
             display: flex;
@@ -123,13 +151,15 @@
             align-items: center;
             margin-bottom: 14px;
             flex-shrink: 0;
-            background: #FFF;
+            background: var(--card);
             padding: 10px 14px;
             border-radius: 12px;
             box-shadow: var(--shadow);
         }
+        .header-title { font-weight: 700; font-size: 15px; }
+        .header-sub { color: var(--sub); font-size: 12px; }
 
-        /* KOMPAKTERE KARTEN FÜR ANGENEHMES TIPPEN */
+        /* SPIELKARTEN */
         .game-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -139,6 +169,10 @@
             width: 100%;
         }
         .card {
+            appearance: none;
+            -webkit-appearance: none;
+            font: inherit;
+            color: var(--text);
             background: var(--card);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
@@ -156,16 +190,17 @@
             padding: 6px 10px;
             height: 100%;
             width: 100%;
+            animation: fadeIn 0.2s ease backwards;
         }
         .card:active {
             transform: scale(0.96);
         }
         .card.selected {
             border-color: var(--primary);
-            background-color: #E8F2FF;
+            background-color: var(--selected-bg);
         }
         .card.matched {
-            background-color: #E5F9E7;
+            background-color: var(--matched-bg);
             border-color: var(--success);
             opacity: 0.2;
             pointer-events: none;
@@ -211,6 +246,7 @@
             border: none;
             padding: 8px 14px;
             border-radius: 18px;
+            font: inherit;
             font-weight: 600;
             font-size: 13px;
             cursor: pointer;
@@ -218,10 +254,46 @@
         .btn:active {
             opacity: 0.8;
         }
+        .btn.big { padding: 12px; }
+        .btn.grey { background: #8E8E93; }
+        .btn.red { background: var(--danger); }
+
+        .empty-hint {
+            border: 2px dashed var(--field);
+            border-radius: 14px;
+            padding: 30px 20px;
+            text-align: center;
+            color: var(--sub);
+            font-size: 14px;
+            margin-top: 10px;
+        }
 
         /* VOKABELLISTE */
+        .list-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
+        .list-controls input {
+            flex: 1;
+            min-width: 0;
+            padding: 10px 12px;
+            border: none;
+            background: var(--field);
+            color: var(--text);
+            border-radius: 10px;
+        }
+        .list-controls select {
+            padding: 0 10px;
+            border: none;
+            background: var(--card);
+            border-radius: 10px;
+            font-weight: 600;
+            color: var(--text);
+        }
         .vocab-list {
-            background: white;
+            background: var(--card);
             border-radius: var(--radius);
             overflow-y: auto;
             box-shadow: var(--shadow);
@@ -229,18 +301,26 @@
         }
         .vocab-item {
             padding: 11px 14px;
-            border-bottom: 1px solid #EFEFF4;
+            border-bottom: 1px solid var(--line);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: white;
+            gap: 10px;
+            cursor: pointer;
+        }
+        .vocab-item small { color: var(--sub); }
+        .list-info {
+            padding: 10px 14px;
+            font-size: 12px;
+            color: var(--sub);
+            text-align: center;
         }
         .box-badge {
             font-size: 11px;
             padding: 2px 6px;
             border-radius: 6px;
-            background: #EFEFF4;
-            color: #666;
+            background: var(--field);
+            color: var(--sub);
             margin-left: 6px;
             font-weight: 600;
         }
@@ -248,15 +328,24 @@
             background: var(--gold);
             color: #fff;
         }
+        .err-pill {
+            background: var(--danger);
+            color: #fff;
+            padding: 4px 9px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
 
-        /* PROFIL / STATISTIKEN */
+        /* PROFIL */
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
         }
         .stat-card {
-            background: white;
+            background: var(--card);
             padding: 16px 12px;
             border-radius: var(--radius);
             text-align: center;
@@ -268,8 +357,35 @@
             display: block;
             margin-bottom: 4px;
         }
+        .stat-label {
+            font-size: 11px;
+            color: var(--sub);
+            font-weight: 600;
+        }
+        .stat-row {
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 14px;
+        }
+        .stat-row strong {
+            display: block;
+            font-size: 20px;
+            margin-top: 2px;
+        }
+        .divider { height: 30px; width: 1px; background: var(--field); }
+        .btn-row { display: flex; gap: 10px; margin-top: 10px; }
+        .btn-row .btn { flex: 1; }
+        .profile-actions {
+            margin-top: auto;
+            gap: 10px;
+            display: flex;
+            flex-direction: column;
+            padding-top: 16px;
+        }
 
-        /* TOAST FEEDBACK */
+        /* TOAST */
         #toast {
             position: fixed;
             bottom: calc(24px + env(safe-area-inset-bottom));
@@ -306,12 +422,12 @@
 <body>
 
 <nav class="nav-tabs">
-    <button class="tab-btn active" onclick="app.switchTab('game')">Spiel</button>
-    <button class="tab-btn" onclick="app.switchTab('weak')">
+    <button class="tab-btn active" data-tab="game" onclick="app.switchTab('game')">Spiel</button>
+    <button class="tab-btn" data-tab="weak" onclick="app.switchTab('weak')">
         Training <span id="weakBadge" class="badge" style="display:none">0</span>
     </button>
-    <button class="tab-btn" onclick="app.switchTab('manage')">Liste</button>
-    <button class="tab-btn" onclick="app.switchTab('stats')">Profil</button>
+    <button class="tab-btn" data-tab="manage" onclick="app.switchTab('manage')">Liste</button>
+    <button class="tab-btn" data-tab="stats" onclick="app.switchTab('stats')">Profil</button>
 </nav>
 
 <div class="content-area">
@@ -319,8 +435,8 @@
     <div id="tab-game" class="tab-content active">
         <div class="game-header">
             <div>
-                <div style="font-weight:700; font-size:15px" id="gameProgress">0 / 5 Paare</div>
-                <div style="color:var(--sub); font-size:12px" id="roundSubtext">Runde 1 • V15 Smart-SRS</div>
+                <div class="header-title" id="gameProgress">0 / 5 Paare</div>
+                <div class="header-sub" id="roundSubtext">Runde 1</div>
             </div>
             <button class="btn" onclick="app.startNewGame('normal')">Überspringen ↻</button>
         </div>
@@ -331,25 +447,27 @@
     <div id="tab-weak" class="tab-content">
         <div class="game-header">
             <div>
-                <div style="font-weight:700; font-size:15px">Fehler-Training</div>
-                <div style="color:var(--sub); font-size:12px" id="weakCountDisplay">0 Wörter mit Fehlern</div>
+                <div class="header-title">Fehler-Training</div>
+                <div class="header-sub" id="weakCountDisplay">0 Wörter mit Fehlern</div>
             </div>
-            <button class="btn" id="btnStartWeak" onclick="app.startNewGame('weak')">Starten ▶</button>
+            <button class="btn" onclick="app.startNewGame('weak')">Neu mischen ▶</button>
         </div>
         <div id="weakBoard" class="game-grid"></div>
-        <div id="weakEmptyHint" style="border: 2px dashed #D1D1D6; border-radius: 14px; padding: 30px 20px; text-align: center; color: var(--sub); font-size: 14px; margin-top: 10px;">
+        <div id="weakEmptyHint" class="empty-hint">
             Sobald du im Spiel ein Wortpaar verwechselst, wird es hier gespeichert und kann gezielt geübt werden.
         </div>
     </div>
 
     <!-- TAB 3: LISTE -->
     <div id="tab-manage" class="tab-content">
-        <div style="display:flex; gap:8px; margin-bottom:10px; flex-shrink:0;">
-            <input type="text" id="searchInput" placeholder="Wort suchen..." style="flex:1; padding:10px 12px; border:none; background:#E5E5EA; border-radius:10px; font-size:14px;" oninput="app.renderVocabList()">
-            <select id="filterSelect" onchange="app.renderVocabList()" style="padding:0 10px; border:none; background:#FFF; border-radius:10px; font-weight:600; font-size:13px; color:var(--text);">
+        <div class="list-controls">
+            <input type="search" id="searchInput" placeholder="Wort suchen..." autocomplete="off" autocapitalize="off" oninput="app.renderVocabList()">
+            <select id="filterSelect" onchange="app.renderVocabList()">
                 <option value="all">Alle (Fehler zuerst)</option>
                 <option value="errors">Nur Fehler</option>
+                <option value="learning">In Arbeit (Box 1–4)</option>
                 <option value="master">Meister (Box 5)</option>
+                <option value="new">Noch neu</option>
             </select>
         </div>
         <div class="vocab-list" id="vocabListContainer"></div>
@@ -360,37 +478,51 @@
         <div class="stats-grid">
             <div class="stat-card">
                 <span class="stat-num" style="color:var(--primary)" id="statTotalWords">0</span>
-                <span style="font-size:11px;color:var(--sub);font-weight:600">VOKABELN GESAMT</span>
+                <span class="stat-label">VOKABELN GESAMT</span>
             </div>
             <div class="stat-card">
                 <span class="stat-num" style="color:var(--gold)" id="statMastered">0</span>
-                <span style="font-size:11px;color:var(--sub);font-weight:600">MEISTER (BOX 5)</span>
+                <span class="stat-label">MEISTER (BOX 5)</span>
             </div>
             <div class="stat-card">
                 <span class="stat-num" style="color:var(--success)" id="statRounds">0</span>
-                <span style="font-size:11px;color:var(--sub);font-weight:600">RUNDEN GESPIELT</span>
+                <span class="stat-label">RUNDEN ABGESCHLOSSEN</span>
             </div>
             <div class="stat-card">
                 <span class="stat-num" style="color:var(--danger)" id="statErrors">0</span>
-                <span style="font-size:11px;color:var(--sub);font-weight:600">FEHLER GESAMT</span>
+                <span class="stat-label">FEHLER GESAMT</span>
             </div>
         </div>
 
-        <div class="stat-card" style="margin-top:10px; display:flex; justify-content:space-around; align-items:center; padding:14px">
+        <div class="stat-card stat-row">
             <div>
-                <span style="font-size:11px;color:var(--sub);font-weight:600">GELÖSTE PAARE</span>
-                <strong style="display:block;font-size:20px;margin-top:2px;color:var(--text)" id="statPairsFound">0</strong>
+                <span class="stat-label">GELERNT (BOX ≥ 1)</span>
+                <strong id="statStarted">0</strong>
             </div>
-            <div style="height:30px;width:1px;background:#E5E5EA"></div>
+            <div class="divider"></div>
             <div>
-                <span style="font-size:11px;color:var(--sub);font-weight:600">AKTUELLE FEHLER-WÖRTER</span>
-                <strong style="display:block;font-size:20px;margin-top:2px;color:var(--danger)" id="statOpenWeak">0</strong>
+                <span class="stat-label">GELÖSTE PAARE</span>
+                <strong id="statPairsFound">0</strong>
+            </div>
+            <div class="divider"></div>
+            <div>
+                <span class="stat-label">FEHLER-WÖRTER</span>
+                <strong id="statOpenWeak" style="color:var(--danger)">0</strong>
             </div>
         </div>
 
-        <div style="margin-top:auto; gap:10px; display:flex; flex-direction:column; padding-top:16px">
-            <button class="btn" style="background:#8E8E93; padding:12px" onclick="app.resetStats()">Lernfortschritt zurücksetzen</button>
-            <button class="btn" style="background:var(--danger); padding:12px" onclick="app.hardReset()">Kompletten Speicher löschen</button>
+        <div class="stat-card" style="margin-top:10px">
+            <span class="stat-label">BACKUP</span>
+            <div class="btn-row">
+                <button class="btn" onclick="app.exportData()">Exportieren</button>
+                <button class="btn" onclick="document.getElementById('importFile').click()">Importieren</button>
+            </div>
+            <input type="file" id="importFile" accept="application/json,.json" hidden onchange="app.importData(this)">
+        </div>
+
+        <div class="profile-actions">
+            <button class="btn big grey" onclick="app.resetStats()">Lernfortschritt zurücksetzen</button>
+            <button class="btn big red" onclick="app.hardReset()">Kompletten Speicher löschen</button>
         </div>
     </div>
 </div>
@@ -398,6 +530,7 @@
 <div id="toast"></div>
 
 <script>
+// Häufigkeitsliste: Reihenfolge = Reihenfolge, in der neue Wörter eingeführt werden
 const RAW_VOCAB = [
 ["и","and"],["в","in, at"],["не","not"],["он","he"],["на","on, at"],["я","I"],["что","what, that"],["тот","that"],["быть","to be"],["с","with, from"],
 ["а","and, but"],["весь","all"],["это","this is"],["как","how"],["она","she"],["по","along, by"],["но","but"],["они","they"],["к","to"],["у","at, by"],
@@ -418,10 +551,10 @@ const RAW_VOCAB = [
 ["совсем","completely"],["стол","table"],["войти","to enter"],["мир","world/peace"],["пойти","to go"],["старый","old"],["окно","window"],["ребёнок","child"],["найти","to find"],["страна","country"],
 ["увидеть","to see"],["путь","way"],["решить","to decide"],["главный","main"],["пройти","to pass"],["молодой","young"],["считать","to count"],["вернуться","to return"],["работать","to work"],["помнить","to remember"],
 ["вечер","evening"],["опять","again"],["уйти","to leave"],["сын","son"],["ночь","night"],["всегда","always"],["близкий","close"],["помочь","to help"],["улица","street"],["любить","to love"],
-["ответить","to answer"],["ждать","to wait"],["народ","people"],["плечо","shoulder"],["хотя","although"],["сразу","immediately"],["маленький","small"],["брать","to take"],["узнать","to find out"],["вопрос","question"],
+["ответить","to answer"],["народ","people"],["плечо","shoulder"],["хотя","although"],["сразу","immediately"],["маленький","small"],["брать","to take"],["узнать","to find out"],["вопрос","question"],
 ["свет","light"],["быстро","quickly"],["много","many"],["русский","Russian"],["лишь","only"],["форма","form/uniform"],["взгляд","glance"],["вдруг","suddenly"],["любовь","love"],["прийти","to arrive"],
 ["услышать","to hear"],["казаться","to seem"],["комната","room"],["мать","mother"],["получить","to receive"],["глаза","eyes"],["никто","nobody"],["деньги","money"],["оно","it"],["почти","almost"],
-["имя","name"],["тело","body"],["книга","book"],["право","right"],["лес","forest"],["утро","morning"],["наконец","finally"],["писать","to write"],["дорога","road"],["муж","husband"],
+["имя","name"],["тело","body"],["право","right"],["лес","forest"],["утро","morning"],["наконец","finally"],["дорога","road"],["муж","husband"],
 ["пять","five"],["находиться","to be located"],["читать","to read"],["группа","group"],["война","war"],["жена","wife"],["начало","beginning"],["семья","family"],["спать","to sleep"],["мама","mom"],
 ["забыть","to forget"],["показать","to show"],["курс","course"],["движение","movement"],["мужчина","man"],["играть","to play"],["чувствовать","to feel"],["встреча","meeting"],["причина","reason"],["мысль","thought/idea"],
 ["вместе","together"],["интересный","interesting"],["смерть","death"],["вообще","in general"],["месяц","month"],["часто","often"],["советский","Soviet"],["правило","rule"],["слышать","to hear"],["девушка","girl"],
@@ -429,88 +562,125 @@ const RAW_VOCAB = [
 ["состояние","state/condition"],["внимание","attention"],["сердце","heart"],["провести","to spend (time)"],["просить","to ask"],["бежать","to run"],["квартира","apartment"],["приехать","to arrive"],["смочь","to be able"],["умереть","to die"],
 ["положить","to put"],["искать","to search"],["образ","image/shape"],["открыть","to open"],["помощь","help"],["родитель","parent"],["номер","number"],["мало","few"],["длинный","long"],["минута","minute"],
 ["легко","easy"],["школа","school"],["знак","sign"],["солнце","sun"],["компания","company"],["счастье","happiness"],["воздух","air"],["брат","brother"],["сильный","strong"],["всё","everything"],
-["затем","then"],["игра","game"],["армия","army"],["роль","role"],["начальник","boss"],["принять","to accept"],["город","city"],["учиться","to study"],["социальный","social"],["однако","however"],
+["затем","then"],["игра","game"],["армия","army"],["роль","role"],["начальник","boss"],["принять","to accept"],["учиться","to study"],["социальный","social"],["однако","however"],
 ["появиться","to appear"],["написать","to write"],["красный","red"],["государство","state"],["заниматься","to be occupied with"],["вполне","fully"],["четыре","four"],["верить","to believe"],["семь","seven"],["десять","ten"],
-["важный","important"],["точно","exactly"],["событие","event"],["труд","labor"],["представить","to imagine"],["следующий","next"],["вещь","thing"],["порядок","order"],["известный","famous"],["развитие","development"],
-["письмо","letter"],["условие","condition"],["оставаться","to remain"],["поздний","late"],["выходить","to go out"],["час","hour"],["деньги","money"],["план","plan"],["начинать","to begin"],["скоро","soon"],
+["важный","important"],["точно","exactly"],["событие","event"],["труд","labor"],["представить","to imagine"],["следующий","next"],["вещь","thing"],["порядок","order"],["известный","famous, well-known"],["развитие","development"],
+["письмо","letter"],["условие","condition"],["оставаться","to remain"],["поздний","late"],["выходить","to go out"],["план","plan"],["начинать","to begin"],["скоро","soon"],
 ["встретить","to meet"],["директор","director"],["центр","center"],["позволить","to allow"],["получать","to receive"],["полный","full"],["церковь","church"],["слушать","to listen"],["уровень","level"],["действие","action"],
-["вновь","again"],["красивый","beautiful"],["понимать","to understand"],["приходить","to come"],["происходить","to happen"],["свободный","free"],["качество","quality"],["разговор","conversation"],["черный","black"],["белый","white"],
-["купить","to buy"],["похожий","similar"],["надеяться","to hope"],["упасть","to fall"],["потом","then"],["телефон","phone"],["страх","fear"],["потерять","to lose"],["предложить","to offer"],["простой","simple"],
+["вновь","again"],["красивый","beautiful"],["понимать","to understand"],["приходить","to come"],["происходить","to happen"],["свободный","free"],["качество","quality"],["разговор","conversation"],["чёрный","black"],["белый","white"],
+["купить","to buy"],["похожий","similar"],["надеяться","to hope"],["упасть","to fall"],["телефон","phone"],["страх","fear"],["потерять","to lose"],["предложить","to offer"],["простой","simple"],
 ["цена","price"],["заметить","to notice"],["вызывать","to call"],["поведение","behavior"],["одежда","clothes"],["стена","wall"],["сосед","neighbor"],["собака","dog"],["дерево","tree"],["факт","fact"],
 ["послать","to send"],["звук","sound"],["фильм","film"],["ехать","to go (by transport)"],["камень","stone"],["огонь","fire"],["цель","goal"],["врач","doctor"],["больница","hospital"],["продукт","product"],
-["вкус","taste"],["мнение","opinion"],["ошибка","mistake"],["старик","old man"],["кошка","cat"],["цвет","color"],["ветер","wind"],["дождь","rain"],["снег","snow"],["утро","morning"],
+["вкус","taste"],["мнение","opinion"],["ошибка","mistake"],["старик","old man"],["кошка","cat"],["цвет","color"],["ветер","wind"],["дождь","rain"],["снег","snow"],
 ["золото","gold"],["рыба","fish"],["птица","bird"],["хлеб","bread"],["мясо","meat"],["молоко","milk"],["чай","tea"],["кофе","coffee"],["сахар","sugar"],["соль","salt"],
-["завтрак","breakfast"],["обед","lunch"],["ужин","dinner"],["магазин","shop"],["рынок","market"],["платить","to pay"],["стоит","costs"],["дорогой","expensive/dear"],["дешевый","cheap"],["открыто","open"],
-["закрыто","closed"],["вход","entrance"],["выход","exit"],["туалет","toilet"],["мужчина","man"],["женщина","woman"],["мальчик","boy"],["девочка","girl"],["друг","friend"],["гость","guest"],
-["подарок","gift"],["праздник","holiday"],["новый год","New Year"],["день рождения","birthday"],["спасибо","thank you"],["пожалуйста","please"],["здравствуйте","hello"],["привет","hi"],["до свидания","goodbye"],["извините","sorry"],
-["плохо","badly"],["медленно","slowly"],["много","a lot"],["немного","a little"],["сегодня","today"],["завтра","tomorrow"],["вчера","yesterday"],["неделя","week"],["понедельник","Monday"],["вторник","Tuesday"],
+["завтрак","breakfast"],["обед","lunch"],["ужин","dinner"],["магазин","shop"],["рынок","market"],["платить","to pay"],["стоит","costs"],["дорогой","expensive/dear"],["дешёвый","cheap"],["открыто","open"],
+["закрыто","closed"],["вход","entrance"],["выход","exit"],["туалет","toilet"],["мальчик","boy"],["девочка","girl"],["гость","guest"],
+["подарок","gift"],["праздник","holiday"],["Новый год","New Year"],["день рождения","birthday"],["спасибо","thank you"],["пожалуйста","please"],["здравствуйте","hello"],["привет","hi"],["до свидания","goodbye"],["извините","sorry"],
+["плохо","badly"],["медленно","slowly"],["немного","a little"],["сегодня","today"],["завтра","tomorrow"],["вчера","yesterday"],["неделя","week"],["понедельник","Monday"],["вторник","Tuesday"],
 ["среда","Wednesday"],["четверг","Thursday"],["пятница","Friday"],["суббота","Saturday"],["воскресенье","Sunday"],["январь","January"],["февраль","February"],["март","March"],["апрель","April"],["май","May"],
 ["июнь","June"],["июль","July"],["август","August"],["сентябрь","September"],["октябрь","October"],["ноябрь","November"],["декабрь","December"],["зима","winter"],["весна","spring"],["лето","summer"],
 ["осень","autumn"],["погода","weather"],["градус","degree"],["тепло","warm"],["холодно","cold"],["жарко","hot"],["солнечно","sunny"],["облачно","cloudy"],["опасный","dangerous"],["безопасный","safe"],
 ["чистый","clean"],["грязный","dirty"],["умный","smart"],["глупый","stupid"],["богатый","rich"],["бедный","poor"],["здоровый","healthy"],["больной","sick"],["счастливый","happy"],["грустный","sad"],
-["смешной","funny"],["серьезный","serious"],["добрый","kind"],["злой","angry"],["старший","older"],["младший","younger"],["громкий","loud"],["тихий","quiet"],["высокий","tall/high"],["низкий","low/short"],
-["широкий","wide"],["узкий","narrow"],["толстый","fat/thick"],["тонкий","thin"],["тяжелый","heavy"],["легкий","light/easy"],["мягкий","soft"],["твердый","hard"],["сухой","dry"],["мокрый","wet"],
+["смешной","funny"],["серьёзный","serious"],["добрый","kind"],["злой","angry"],["старший","older"],["младший","younger"],["громкий","loud"],["тихий","quiet"],["высокий","tall/high"],["низкий","low/short"],
+["широкий","wide"],["узкий","narrow"],["толстый","fat/thick"],["тонкий","thin"],["тяжёлый","heavy"],["лёгкий","light/easy"],["мягкий","soft"],["твёрдый","hard"],["сухой","dry"],["мокрый","wet"],
 ["пустой","empty"],["сладкий","sweet"],["горький","bitter"],["кислый","sour"],["свежий","fresh"],["быстрый","fast"],["медленный","slow"],["правильный","correct"],["неправильный","wrong"],["удобный","comfortable"],
-["важный","important"],["нужный","necessary"],["готовый","ready"],["свободный","free"],["занятый","busy"],["открытый","open"],["закрытый","closed"],["любимый","favorite"],["прекрасный","wonderful"],["ужасный","terrible"],
-["странный","strange"],["обычный","usual"],["разный","different"],["похожий","similar"],["одинаковый","same"],["общий","common"],["личный","personal"],["частный","private"],["общественный","public"],["государственный","state"],
+["нужный","necessary"],["готовый","ready"],["занятый","busy"],["открытый","open"],["закрытый","closed"],["любимый","favorite"],["прекрасный","wonderful"],["ужасный","terrible"],
+["странный","strange"],["обычный","usual"],["разный","different"],["одинаковый","same"],["общий","common"],["личный","personal"],["частный","private"],["общественный","public"],["государственный","state"],
 ["национальный","national"],["международный","international"],["военный","military"],["медицинский","medical"],["научный","scientific"],["технический","technical"],["экономический","economic"],["политический","political"],["исторический","historical"],["культурный","cultural"],
 ["детский","children's"],["женский","female"],["мужской","male"],["школьный","school"],["университетский","university"],["городской","urban"],["сельский","rural"],["деревенский","village"],["домашний","home/domestic"],["дикий","wild"],
-["живой","alive"],["мертвый","dead"],["больной","sick"],["беременная","pregnant"],["пьяный","drunk"],["сытой","full (food)"],["голодный","hungry"],["усталый","tired"],["рад","glad"],["уверенный","sure"],
-["виноват","guilty"],["прав","right"],["согласен","agree"],["готов","ready"],["должен","must"],["нужен","needed"],["способен","capable"],["благодарен","grateful"],["женат","married (man)"],["замужем","married (woman)"],
-["полезный","useful"],["вредный","harmful"],["опасный","dangerous"],["безопасный","safe"],["возможный","possible"],["невозможный","impossible"],["вероятный","probable"],["очевидный","obvious"],["понятный","understandable"],["известный","known"],
-["знакомый","familiar"],["незнакомый","unfamiliar"],["интересный","interesting"],["скучный","boring"],["веселый","merry"],["грустный","sad"],["смешной","funny"],["серьезный","serious"],["спокойный","calm"],["нервный","nervous"],
-["активный","active"],["пассивный","passive"],["сильный","strong"],["слабый","weak"],["умный","smart"],["честный","honest"],["хитрый","cunning"],["смелый","brave"],["трусливый","cowardly"],["добрый","kind"],
+["живой","alive"],["мёртвый","dead"],["беременная","pregnant"],["пьяный","drunk"],["сытый","full (food)"],["голодный","hungry"],["усталый","tired"],["рад","glad"],["уверенный","sure"],
+["виноват","guilty"],["прав","right"],["согласен","agree"],["готов","ready"],["нужен","needed"],["способен","capable"],["благодарен","grateful"],["женат","married (man)"],["замужем","married (woman)"],
+["полезный","useful"],["вредный","harmful"],["возможный","possible"],["невозможный","impossible"],["вероятный","probable"],["очевидный","obvious"],["понятный","understandable"],
+["знакомый","familiar"],["незнакомый","unfamiliar"],["скучный","boring"],["весёлый","merry"],["спокойный","calm"],["нервный","nervous"],
+["активный","active"],["пассивный","passive"],["слабый","weak"],["честный","honest"],["хитрый","cunning"],["смелый","brave"],["трусливый","cowardly"],
 ["жестокий","cruel"],["жадный","greedy"],["щедрый","generous"],["вежливый","polite"],["грубый","rude"],["внимательный","attentive"],["осторожный","careful"],["аккуратный","neat"],["ленивый","lazy"],["трудолюбивый","hardworking"]
 ];
 
+// Schlüssel bewusst beibehalten, damit vorhandener Fortschritt erhalten bleibt
 const STORAGE_KEY = 'ru_trainer_v15_pro';
 const OLD_KEYS = ['ru_trainer_v14_smart', 'ru_trainer_v13_hardened'];
+
+const PAIRS_PER_ROUND = 5;
+const MIN_WEAK_PAIRS = 3;
+// Leitner-Intervalle: nach wie vielen Runden ein Wort aus Box n wieder fällig ist
+const BOX_INTERVALS = [0, 2, 4, 8, 20, 50];
+
+const SPEAKER_SVG = `<svg class="speaker-icon" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`;
+
+// ё und е gleich behandeln, damit alter Fortschritt zu korrigierten Wörtern passt
+const norm = s => String(s).trim().toLowerCase().replace(/ё/g, 'е');
+
+// Bedeutungs-Bausteine: Wörter mit gemeinsamem Baustein kommen nie in dieselbe Runde
+const meaningTokens = en => en.toLowerCase().split(/[,/;()]/).map(s => s.trim()).filter(Boolean);
+
+const shuffle = arr => {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+};
+
+const newSession = boardId => ({
+    boardId,
+    cards: [],
+    selected: null,
+    locked: false,
+    matches: 0,
+    totalPairs: 0,
+    gameId: 0,
+    nextTimer: null
+});
 
 const app = {
     data: {
         vocab: [],
-        stats: { rounds: 0, pairsFound: 0, totalErrors: 0 }
+        stats: { rounds: 0, completed: 0, pairsFound: 0, totalErrors: 0, gameSeq: 0 }
     },
-    state: {
-        cards: [],
-        selected: null,
-        locked: false,
-        matches: 0,
-        totalPairs: 0,
-        mode: 'normal',
-        toastTimer: null
+    byKey: new Map(),
+    sessions: {
+        normal: newSession('gameBoard'),
+        weak: newSession('weakBoard')
+    },
+    voice: null,
+    voiceWarned: false,
+    saveWarned: false,
+    toastTimer: null,
+
+    /* ---------- LADEN & SPEICHERN ---------- */
+
+    loadRaw() {
+        try {
+            const current = localStorage.getItem(STORAGE_KEY);
+            if (current) return current;
+            for (const k of OLD_KEYS) {
+                const old = localStorage.getItem(k);
+                if (old) return old;
+            }
+        } catch (e) {
+            console.warn('localStorage nicht verfügbar:', e);
+        }
+        return null;
     },
 
     init() {
-        let rawStored = localStorage.getItem(STORAGE_KEY);
-        if (!rawStored) {
-            for (const k of OLD_KEYS) {
-                if (localStorage.getItem(k)) {
-                    rawStored = localStorage.getItem(k);
-                    break;
-                }
-            }
-        }
+        const raw = this.loadRaw();
+        const saved = new Map();
 
-        let savedMap = {};
-        if (rawStored) {
+        if (raw) {
             try {
-                const parsed = JSON.parse(rawStored);
+                const parsed = JSON.parse(raw);
+                const s = parsed.stats || {};
                 this.data.stats = {
-                    rounds: Number(parsed.stats?.rounds) || 0,
-                    pairsFound: Number(parsed.stats?.pairsFound) || 0,
-                    totalErrors: Number(parsed.stats?.totalErrors) || 0
+                    rounds: Number(s.rounds) || 0,
+                    completed: Number(s.completed) || 0,
+                    pairsFound: Number(s.pairsFound) || 0,
+                    totalErrors: Number(s.totalErrors) || 0,
+                    gameSeq: Number(s.gameSeq) || 0
                 };
                 if (Array.isArray(parsed.vocab)) {
                     parsed.vocab.forEach(v => {
-                        if (v && v.russian) {
-                            savedMap[String(v.russian).trim()] = {
-                                errors: Number(v.errors) || 0,
-                                box: Number(v.box) || 0,
-                                lastSeen: Number(v.lastSeen) || 0,
-                                lastErrorRound: Number(v.lastErrorRound) || 0
-                            };
-                        }
+                        if (v && v.russian) saved.set(norm(v.russian), v);
                     });
                 }
             } catch (e) {
@@ -520,307 +690,408 @@ const app = {
 
         const seen = new Set();
         this.data.vocab = [];
-        RAW_VOCAB.forEach(pair => {
-            const ru = String(pair[0]).trim();
-            const en = String(pair[1]).trim();
-            if (!seen.has(ru)) {
-                seen.add(ru);
-                const prev = savedMap[ru] || { errors: 0, box: 0, lastSeen: 0, lastErrorRound: 0 };
-                this.data.vocab.push({
-                    russian: ru,
-                    english: en,
-                    errors: prev.errors,
-                    box: prev.box,
-                    lastSeen: prev.lastSeen,
-                    lastErrorRound: prev.lastErrorRound
-                });
-            }
+        RAW_VOCAB.forEach(([ru, en], idx) => {
+            const key = norm(ru);
+            if (seen.has(key)) return;
+            seen.add(key);
+            const prev = saved.get(key) || {};
+            const word = {
+                russian: String(ru).trim(),
+                english: String(en).trim(),
+                key,
+                rank: idx,
+                tokens: meaningTokens(String(en)),
+                errors: Math.max(0, Number(prev.errors) || 0),
+                box: Math.min(5, Math.max(0, Number(prev.box) || 0)),
+                lastSeen: Number(prev.lastSeen) || 0,
+                errorGame: -1
+            };
+            this.data.vocab.push(word);
+            this.byKey.set(key, word);
         });
 
-        // Falls totalErrors durch den alten Bug auf 0 hing, aber Wörter Fehler haben, synchronisieren:
-        const sumWordErrors = this.data.vocab.reduce((acc, v) => acc + (v.errors || 0), 0);
-        if (this.data.stats.totalErrors < sumWordErrors) {
-            this.data.stats.totalErrors = sumWordErrors;
-        }
+        const sumWordErrors = this.data.vocab.reduce((acc, v) => acc + v.errors, 0);
+        this.data.stats.totalErrors = Math.max(this.data.stats.totalErrors, sumWordErrors);
 
-        this.save();
+        this.initVoice();
         this.startNewGame('normal');
+    },
+
+    serialize() {
+        return JSON.stringify({
+            version: 16,
+            stats: this.data.stats,
+            vocab: this.data.vocab
+                .filter(v => v.box || v.errors || v.lastSeen)
+                .map(v => ({ russian: v.russian, errors: v.errors, box: v.box, lastSeen: v.lastSeen }))
+        });
     },
 
     save() {
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+            localStorage.setItem(STORAGE_KEY, this.serialize());
         } catch (e) {
             console.error('Save error:', e);
+            if (!this.saveWarned) {
+                this.saveWarned = true;
+                this.showToast('Speichern nicht möglich (Privatmodus?)');
+            }
         }
         this.updateUI();
     },
+
+    /* ---------- FEEDBACK ---------- */
 
     showToast(msg) {
         const t = document.getElementById('toast');
         if (!t) return;
         t.textContent = msg;
         t.classList.add('show');
-        clearTimeout(this.state.toastTimer);
-        this.state.toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+        clearTimeout(this.toastTimer);
+        this.toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+    },
+
+    initVoice() {
+        if (!('speechSynthesis' in window)) return;
+        this.pickVoice();
+        window.speechSynthesis.onvoiceschanged = () => this.pickVoice();
+    },
+
+    pickVoice() {
+        const voices = window.speechSynthesis.getVoices();
+        this.voice = voices.find(v => v.lang === 'ru-RU')
+            || voices.find(v => /^ru/i.test(v.lang))
+            || null;
     },
 
     speak(text) {
         if (!('speechSynthesis' in window)) return;
         try {
-            window.speechSynthesis.cancel();
+            const synth = window.speechSynthesis;
+            if (!this.voice) this.pickVoice();
+            synth.cancel();
             const u = new SpeechSynthesisUtterance(text);
             u.lang = 'ru-RU';
-            u.rate = 0.95;
-            window.speechSynthesis.speak(u);
+            u.rate = 0.9;
+            if (this.voice) {
+                u.voice = this.voice;
+            } else if (!this.voiceWarned && synth.getVoices().length) {
+                this.voiceWarned = true;
+                this.showToast('Keine russische Stimme installiert');
+            }
+            synth.speak(u);
         } catch (e) {}
     },
 
+    /* ---------- NAVIGATION ---------- */
+
     switchTab(id) {
-        const tabs = ['game', 'weak', 'manage', 'stats'];
-        document.querySelectorAll('.tab-btn, .tab-content').forEach(e => e.classList.remove('active'));
-        const idx = tabs.indexOf(id);
-        if (idx !== -1) document.querySelectorAll('.tab-btn')[idx].classList.add('active');
-        const target = document.getElementById('tab-' + id);
-        if (target) target.classList.add('active');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === id));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + id));
 
         this.updateUI();
         if (id === 'manage') this.renderVocabList();
-        if (id === 'weak') {
-            const hasErrors = this.data.vocab.some(v => v.errors > 0);
-            if (hasErrors && this.state.mode !== 'weak') {
-                this.startNewGame('weak');
-            }
+        if (id === 'weak' && this.sessions.weak.cards.length === 0) {
+            this.startNewGame('weak', true);
         }
     },
 
-    pickSmartSelection(count = 5) {
-        const nextRound = this.data.stats.rounds + 1;
-        const all = [...this.data.vocab];
-        const chosen = [];
-        const chosenSet = new Set();
+    /* ---------- WORTAUSWAHL ---------- */
 
-        const addWord = (w) => {
-            if (w && !chosenSet.has(w.russian) && chosen.length < count) {
+    makePicker(count) {
+        const chosen = [];
+        const usedTokens = new Set();
+        return {
+            chosen,
+            full: () => chosen.length >= count,
+            add: w => {
+                if (!w || chosen.length >= count || chosen.includes(w)) return false;
+                if (w.tokens.some(t => usedTokens.has(t))) return false;
                 chosen.push(w);
-                chosenSet.add(w.russian);
+                w.tokens.forEach(t => usedTokens.add(t));
+                return true;
             }
         };
-
-        // 1. Bis zu 2 Fehler-Wörter einstreuen (bevorzugt solche, die mindestens 1 Runde Pause hatten)
-        const errorWords = all.filter(v => v.errors > 0).sort((a, b) => {
-            const pauseA = (nextRound - (a.lastSeen || 0)) >= 2 ? 1 : 0;
-            const pauseB = (nextRound - (b.lastSeen || 0)) >= 2 ? 1 : 0;
-            if (pauseB !== pauseA) return pauseB - pauseA;
-            return b.errors - a.errors;
-        });
-        errorWords.slice(0, 2).forEach(addWord);
-
-        // 2. Restliche Plätze auffüllen (keine direkten Wiederholungen aus der Vorrunde)
-        const rest = all.filter(v => !chosenSet.has(v.russian));
-        rest.forEach(v => {
-            const since = nextRound - (v.lastSeen || 0);
-            const cooldownPenalty = (v.lastSeen > 0 && since <= 2) ? -600 : Math.min(since * 10, 150);
-            const boxPriority = v.box === 0 ? 130 : (6 - v.box) * 40;
-            const errBonus = (v.errors || 0) * 85;
-            v._score = boxPriority + errBonus + cooldownPenalty + (Math.random() * 60);
-        });
-
-        rest.sort((a, b) => b._score - a._score);
-        for (const w of rest) {
-            if (chosen.length >= count) break;
-            addWord(w);
-        }
-        return chosen;
     },
 
-    startNewGame(mode) {
-        this.state.mode = mode;
-        this.state.matches = 0;
-        this.state.selected = null;
-        this.state.locked = false;
+    pickNormal(count) {
+        const now = this.data.stats.rounds;
+        const vocab = this.data.vocab;
+        const since = w => now - w.lastSeen;
+        const rested = w => !w.lastSeen || since(w) >= 2;
+        const p = this.makePicker(count);
 
-        let selection = [];
-        const weakBoard = document.getElementById('weakBoard');
-        const weakHint = document.getElementById('weakEmptyHint');
+        // 1. Bis zu 2 Fehler-Wörter (mit mind. 1 Runde Pause)
+        const errorWords = vocab
+            .filter(w => w.errors > 0 && rested(w))
+            .sort((a, b) => (b.errors - a.errors) || (since(b) - since(a)));
+        let errAdded = 0;
+        for (const w of errorWords) {
+            if (errAdded >= 2) break;
+            if (p.add(w)) errAdded++;
+        }
 
+        // 2. Fällige Wiederholungen nach Leitner-Intervall (mind. 1 Platz bleibt für Neues)
+        const due = vocab
+            .filter(w => w.box > 0 && w.lastSeen && since(w) >= BOX_INTERVALS[w.box])
+            .map(w => ({ w, prio: since(w) / BOX_INTERVALS[w.box] + Math.random() * 0.5 }))
+            .sort((a, b) => b.prio - a.prio);
+        for (const { w } of due) {
+            if (p.chosen.length >= count - 1) break;
+            p.add(w);
+        }
+
+        // 3. Neue Wörter in Häufigkeits-Reihenfolge, leicht gemischt
+        const fresh = vocab.filter(w => w.box === 0 && w.errors === 0 && rested(w)).slice(0, 12);
+        for (const w of shuffle(fresh)) {
+            if (p.full()) break;
+            p.add(w);
+        }
+
+        // 4. Restliche fällige Wörter
+        for (const { w } of due) {
+            if (p.full()) break;
+            p.add(w);
+        }
+
+        // 5. Notfall-Auffüllung (z. B. wenn fast alles gelernt ist)
+        if (!p.full()) {
+            for (const w of shuffle(vocab.filter(rested))) {
+                if (p.full()) break;
+                p.add(w);
+            }
+        }
+        if (!p.full()) {
+            for (const w of shuffle([...vocab])) {
+                if (p.full()) break;
+                p.add(w);
+            }
+        }
+        return p.chosen;
+    },
+
+    pickWeak(count) {
+        const p = this.makePicker(count);
+        const pool = this.data.vocab
+            .filter(w => w.errors > 0)
+            .map(w => ({ w, prio: w.errors + Math.random() * 1.5 }))
+            .sort((a, b) => b.prio - a.prio);
+        pool.forEach(({ w }) => p.add(w));
+
+        if (p.chosen.length === 0) return [];
+
+        // Kleine Fehlerlisten mit bereits gelernten Wörtern auffüllen
+        if (p.chosen.length < MIN_WEAK_PAIRS) {
+            const filler = shuffle(this.data.vocab.filter(w => w.box > 0 && w.errors === 0));
+            for (const w of filler) {
+                if (p.chosen.length >= MIN_WEAK_PAIRS) break;
+                p.add(w);
+            }
+        }
+        return p.chosen;
+    },
+
+    /* ---------- SPIELABLAUF ---------- */
+
+    startNewGame(mode, silent = false) {
+        const s = this.sessions[mode];
+        clearTimeout(s.nextTimer);
+
+        let selection;
         if (mode === 'weak') {
-            const pool = this.data.vocab.filter(v => v.errors > 0);
-            if (pool.length === 0) {
-                if (weakBoard) weakBoard.innerHTML = '';
-                if (weakHint) weakHint.style.display = 'block';
-                this.showToast('Keine offenen Fehler vorhanden!');
+            selection = this.pickWeak(PAIRS_PER_ROUND);
+            if (selection.length === 0) {
+                s.cards = [];
+                s.selected = null;
+                s.locked = false;
+                s.gameId = -1;
+                this.renderBoard(mode);
+                if (!silent) this.showToast('Keine offenen Fehler vorhanden!');
+                this.updateUI();
                 return;
             }
-            if (weakHint) weakHint.style.display = 'none';
-            pool.sort((a, b) => (b.errors * 25 + Math.random() * 20) - (a.errors * 25 + Math.random() * 20));
-            selection = pool.slice(0, Math.min(5, pool.length));
         } else {
-            selection = this.pickSmartSelection(5);
             this.data.stats.rounds++;
+            selection = this.pickNormal(PAIRS_PER_ROUND);
         }
 
-        this.state.totalPairs = selection.length;
+        this.data.stats.gameSeq++;
+        Object.assign(s, {
+            gameId: this.data.stats.gameSeq,
+            selected: null,
+            locked: false,
+            matches: 0,
+            totalPairs: selection.length
+        });
         selection.forEach(w => { w.lastSeen = this.data.stats.rounds; });
 
-        const ruCards = selection.map(w => ({ text: w.russian, type: 'ru', pairId: w.russian, errors: w.errors }));
-        const enCards = selection.map(w => ({ text: w.english, type: 'en', pairId: w.russian, errors: w.errors }));
+        const ruCards = shuffle(selection.map(w => ({ text: w.russian, type: 'ru', key: w.key, errors: w.errors })));
+        const enCards = shuffle(selection.map(w => ({ text: w.english, type: 'en', key: w.key })));
+        s.cards = [];
+        ruCards.forEach((c, i) => s.cards.push(c, enCards[i]));
 
-        const shuffle = (arr) => {
-            for (let i = arr.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [arr[i], arr[j]] = [arr[j], arr[i]];
-            }
-        };
-        shuffle(ruCards);
-        shuffle(enCards);
-
-        this.state.cards = [];
-        for (let i = 0; i < this.state.totalPairs; i++) {
-            this.state.cards.push(ruCards[i]);
-            this.state.cards.push(enCards[i]);
-        }
-
-        const container = document.getElementById(mode === 'weak' ? 'weakBoard' : 'gameBoard');
-        this.renderBoard(container);
+        this.renderBoard(mode);
 
         if (mode === 'normal') {
-            document.getElementById('gameProgress').textContent = `0 / ${this.state.totalPairs} Paare`;
+            document.getElementById('gameProgress').textContent = `0 / ${s.totalPairs} Paare`;
             const errCount = selection.filter(w => w.errors > 0).length;
-            document.getElementById('roundSubtext').textContent = errCount > 0
-                ? `Runde ${this.data.stats.rounds} • ${errCount} Fehler-Wort dabei`
-                : `Runde ${this.data.stats.rounds} • V15 Smart-SRS`;
+            const newCount = selection.filter(w => w.box === 0 && w.errors === 0).length;
+            const parts = [`Runde ${this.data.stats.rounds}`];
+            if (newCount) parts.push(`${newCount} neu`);
+            if (errCount) parts.push(`${errCount} Fehler-${errCount === 1 ? 'Wort' : 'Wörter'}`);
+            document.getElementById('roundSubtext').textContent = parts.join(' • ');
         }
 
         this.save();
     },
 
-    renderBoard(container) {
-        if (!container) return;
-        container.innerHTML = '';
-        this.state.cards.forEach((c, idx) => {
-            const el = document.createElement('div');
+    renderBoard(mode) {
+        const s = this.sessions[mode];
+        const board = document.getElementById(s.boardId);
+        if (!board) return;
+        board.replaceChildren();
+
+        s.cards.forEach((c, idx) => {
+            const el = document.createElement('button');
+            el.type = 'button';
             el.className = 'card';
-            el.style.animation = `fadeIn 0.2s ease backwards ${idx * 0.025}s`;
+            el.style.animationDelay = `${idx * 0.025}s`;
 
-            const badge = (c.type === 'ru' && c.errors > 0)
-                ? `<span class="card-badge">${c.errors}×</span>`
-                : '';
+            if (c.type === 'ru' && c.errors > 0) {
+                const badge = document.createElement('span');
+                badge.className = 'card-badge';
+                badge.textContent = `${c.errors}×`;
+                el.append(badge);
+            }
 
-            const speaker = c.type === 'ru'
-                ? `<svg class="speaker-icon" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`
-                : '';
+            const text = document.createElement('span');
+            text.className = 'card-text';
+            text.textContent = c.text;
+            el.append(text);
 
-            el.innerHTML = `${badge}<div class="card-text">${c.text}</div>${speaker}`;
-            el.onclick = () => this.handleCardTap(el, c);
-            container.appendChild(el);
+            if (c.type === 'ru') {
+                el.lang = 'ru';
+                el.insertAdjacentHTML('beforeend', SPEAKER_SVG);
+            }
+
+            el.addEventListener('click', () => this.handleCardTap(mode, el, c));
+            board.append(el);
         });
+
+        if (mode === 'weak') {
+            document.getElementById('weakEmptyHint').style.display = s.cards.length ? 'none' : 'block';
+        }
     },
 
-    handleCardTap(el, c) {
+    handleCardTap(mode, el, c) {
+        const s = this.sessions[mode];
         if (c.type === 'ru') this.speak(c.text);
-        if (this.state.locked || el.classList.contains('matched')) return;
+        if (s.locked || el.classList.contains('matched')) return;
 
-        if (this.state.selected?.el === el) {
+        // Gleiche Karte erneut -> abwählen
+        if (s.selected?.el === el) {
             el.classList.remove('selected');
-            this.state.selected = null;
+            s.selected = null;
             return;
         }
 
-        // Gleiche Sprache nochmal getippt -> Auswahl wechseln statt Fehler
-        if (this.state.selected && this.state.selected.data.type === c.type) {
-            this.state.selected.el.classList.remove('selected');
+        // Gleiche Sprache -> Auswahl wechseln statt Fehler
+        if (s.selected && s.selected.data.type === c.type) {
+            s.selected.el.classList.remove('selected');
             el.classList.add('selected');
-            this.state.selected = { el, data: c };
+            s.selected = { el, data: c };
             return;
         }
 
         el.classList.add('selected');
-        if (!this.state.selected) {
-            this.state.selected = { el, data: c };
+        if (!s.selected) {
+            s.selected = { el, data: c };
         } else {
-            this.checkMatch(this.state.selected, { el, data: c });
+            this.checkMatch(mode, s.selected, { el, data: c });
         }
     },
 
-    checkMatch(c1, c2) {
-        this.state.locked = true;
-        const isMatch = c1.data.pairId === c2.data.pairId;
+    checkMatch(mode, a, b) {
+        const s = this.sessions[mode];
+        const gameId = s.gameId;
+        s.locked = true;
 
-        if (isMatch) {
+        if (a.data.key === b.data.key) {
             setTimeout(() => {
-                c1.el?.classList.replace('selected', 'matched');
-                c2.el?.classList.replace('selected', 'matched');
+                if (s.gameId !== gameId) return; // Runde wurde inzwischen übersprungen
 
-                this.state.matches++;
-                this.state.selected = null;
-                this.state.locked = false;
+                a.el.classList.replace('selected', 'matched');
+                b.el.classList.replace('selected', 'matched');
+                s.matches++;
+                s.selected = null;
+                s.locked = false;
                 this.data.stats.pairsFound++;
 
-                if (this.state.mode === 'normal') {
-                    document.getElementById('gameProgress').textContent = `${this.state.matches} / ${this.state.totalPairs} Paare`;
+                const w = this.byKey.get(a.data.key);
+                // Nur hochstufen, wenn das Wort in genau diesem Spiel nicht falsch war
+                if (w && w.errorGame !== gameId) {
+                    w.box = Math.min(5, w.box + 1);
+                    if (w.errors > 0) w.errors--;
                 }
 
-                const wordObj = this.data.vocab.find(v => v.russian === c1.data.pairId);
-                if (wordObj) {
-                    // Nur hochstufen und Fehler abbauen, wenn es nicht in genau dieser Runde falsch war
-                    if (wordObj.lastErrorRound !== this.data.stats.rounds) {
-                        wordObj.box = Math.min(5, (wordObj.box || 0) + 1);
-                        if (wordObj.errors > 0) wordObj.errors--;
-                    }
+                if (mode === 'normal') {
+                    document.getElementById('gameProgress').textContent = `${s.matches} / ${s.totalPairs} Paare`;
+                }
+
+                if (s.matches >= s.totalPairs) {
+                    this.data.stats.completed++;
+                    s.locked = true;
+                    const weakDone = mode === 'weak' && !this.data.vocab.some(v => v.errors > 0);
+                    this.showToast(weakDone
+                        ? 'Alle Fehler-Wörter geschafft! 🎉'
+                        : `${s.totalPairs}/${s.totalPairs} gelöst – nächste Runde!`);
+                    s.nextTimer = setTimeout(() => this.startNewGame(mode, true), 650);
                 }
                 this.save();
-
-                // AUTOMATISCHER WEITERLEITUNGS-FLOW OHNE KLICK
-                if (this.state.matches >= this.state.totalPairs) {
-                    this.showToast('5/5 gelöst – Nächste Runde!');
-                    setTimeout(() => {
-                        this.startNewGame(this.state.mode);
-                    }, 650);
-                }
             }, 180);
         } else {
-            c1.el?.classList.add('error');
-            c2.el?.classList.add('error');
+            a.el.classList.add('error');
+            b.el.classList.add('error');
 
-            // Fehler sofort auf beide beteiligten Wortpaare buchen
-            const w1 = this.data.vocab.find(v => v.russian === c1.data.pairId);
-            const w2 = this.data.vocab.find(v => v.russian === c2.data.pairId);
-
-            [w1, w2].forEach(w => {
+            // Fehler auf beide verwechselten Wörter buchen
+            [a.data.key, b.data.key].forEach(k => {
+                const w = this.byKey.get(k);
                 if (w) {
-                    w.errors = (Number(w.errors) || 0) + 1;
+                    w.errors++;
                     w.box = 1;
-                    w.lastErrorRound = this.data.stats.rounds;
+                    w.errorGame = gameId;
                 }
             });
 
-            this.data.stats.totalErrors = (Number(this.data.stats.totalErrors) || 0) + 1;
+            this.data.stats.totalErrors++;
             this.save();
             this.showToast(`Fehler gespeichert (${this.data.stats.totalErrors} gesamt)`);
 
             setTimeout(() => {
-                c1.el?.classList.remove('selected', 'error');
-                c2.el?.classList.remove('selected', 'error');
-                this.state.selected = null;
-                this.state.locked = false;
+                a.el.classList.remove('selected', 'error');
+                b.el.classList.remove('selected', 'error');
+                if (s.gameId !== gameId) return;
+                s.selected = null;
+                s.locked = false;
             }, 600);
         }
     },
 
+    /* ---------- ANZEIGE ---------- */
+
     updateUI() {
-        const total = this.data.vocab.length;
-        const weakWords = this.data.vocab.filter(v => (v.errors || 0) > 0).length;
-        const mastered = this.data.vocab.filter(v => v.box === 5).length;
+        const vocab = this.data.vocab;
+        const weakWords = vocab.filter(v => v.errors > 0).length;
 
         const setEl = (id, val) => {
             const el = document.getElementById(id);
             if (el) el.textContent = val;
         };
 
-        setEl('statTotalWords', total);
-        setEl('statMastered', mastered);
-        setEl('statRounds', this.data.stats.rounds);
+        setEl('statTotalWords', vocab.length);
+        setEl('statMastered', vocab.filter(v => v.box === 5).length);
+        setEl('statStarted', vocab.filter(v => v.box > 0).length);
+        setEl('statRounds', this.data.stats.completed);
         setEl('statErrors', this.data.stats.totalErrors);
         setEl('statPairsFound', this.data.stats.pairsFound);
         setEl('statOpenWeak', weakWords);
@@ -828,71 +1099,123 @@ const app = {
 
         const badge = document.getElementById('weakBadge');
         if (badge) {
-            if (weakWords > 0) {
-                badge.textContent = weakWords;
-                badge.style.display = 'inline-block';
-            } else {
-                badge.style.display = 'none';
-            }
+            badge.textContent = weakWords;
+            badge.style.display = weakWords > 0 ? 'inline-block' : 'none';
         }
     },
 
     renderVocabList() {
-        const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
+        const q = norm(document.getElementById('searchInput')?.value || '');
         const filter = document.getElementById('filterSelect')?.value || 'all';
         const list = document.getElementById('vocabListContainer');
         if (!list) return;
-        list.innerHTML = '';
+        list.replaceChildren();
 
-        let items = this.data.vocab.filter(v =>
-            v.russian.toLowerCase().includes(q) || v.english.toLowerCase().includes(q)
-        );
+        let items = this.data.vocab.filter(v => v.key.includes(q) || v.english.toLowerCase().includes(q));
 
-        if (filter === 'errors') {
-            items = items.filter(v => v.errors > 0);
-        } else if (filter === 'master') {
-            items = items.filter(v => v.box === 5);
-        }
+        if (filter === 'errors') items = items.filter(v => v.errors > 0);
+        else if (filter === 'learning') items = items.filter(v => v.box > 0 && v.box < 5);
+        else if (filter === 'master') items = items.filter(v => v.box === 5);
+        else if (filter === 'new') items = items.filter(v => v.box === 0 && v.errors === 0);
 
-        // Standardmäßig Wörter mit Fehlern immer ganz oben anzeigen!
-        items.sort((a, b) => (b.errors || 0) - (a.errors || 0));
+        items.sort((a, b) => (b.errors - a.errors) || (a.rank - b.rank));
 
         if (items.length === 0) {
-            list.innerHTML = `<div style="padding:24px;text-align:center;color:var(--sub)">Keine Einträge gefunden.</div>`;
+            const empty = document.createElement('div');
+            empty.className = 'list-info';
+            empty.textContent = 'Keine Einträge gefunden.';
+            list.append(empty);
             return;
         }
 
-        items.slice(0, 100).forEach(v => {
+        const LIMIT = 150;
+        items.slice(0, LIMIT).forEach(v => {
             const row = document.createElement('div');
             row.className = 'vocab-item';
-            const boxClass = v.box === 5 ? 'master' : '';
-            row.innerHTML = `
-                <div onclick="app.speak('${v.russian.replace(/'/g, "\\'")}')" style="cursor:pointer; flex:1">
-                    <strong>${v.russian}</strong> 🔊 <span class="box-badge ${boxClass}">Box ${v.box || 0}</span><br>
-                    <small style="color:var(--sub)">${v.english}</small>
-                </div>
-                ${v.errors > 0 ? `<div style="background:var(--danger);color:#fff;padding:4px 9px;border-radius:10px;font-size:12px;font-weight:700">${v.errors}× falsch</div>` : ''}
-            `;
-            list.appendChild(row);
+            row.addEventListener('click', () => this.speak(v.russian));
+
+            const left = document.createElement('div');
+            const ru = document.createElement('strong');
+            ru.lang = 'ru';
+            ru.textContent = v.russian;
+            const box = document.createElement('span');
+            box.className = 'box-badge' + (v.box === 5 ? ' master' : '');
+            box.textContent = `Box ${v.box}`;
+            const en = document.createElement('small');
+            en.textContent = v.english;
+            left.append(ru, ' 🔊 ', box, document.createElement('br'), en);
+            row.append(left);
+
+            if (v.errors > 0) {
+                const pill = document.createElement('div');
+                pill.className = 'err-pill';
+                pill.textContent = `${v.errors}× falsch`;
+                row.append(pill);
+            }
+            list.append(row);
         });
+
+        if (items.length > LIMIT) {
+            const info = document.createElement('div');
+            info.className = 'list-info';
+            info.textContent = `Zeige ${LIMIT} von ${items.length} – Suche nutzen, um weitere zu finden.`;
+            list.append(info);
+        }
+    },
+
+    /* ---------- BACKUP & RESET ---------- */
+
+    exportData() {
+        try {
+            const blob = new Blob([this.serialize()], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `russisch-trainer-backup-${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.append(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 2000);
+        } catch (e) {
+            this.showToast('Export fehlgeschlagen');
+        }
+    },
+
+    importData(input) {
+        const file = input.files && input.files[0];
+        input.value = '';
+        if (!file) return;
+        file.text()
+            .then(txt => {
+                const parsed = JSON.parse(txt);
+                if (!parsed || !Array.isArray(parsed.vocab) || typeof parsed.stats !== 'object') {
+                    throw new Error('Ungültiges Format');
+                }
+                if (!confirm('Aktuellen Fortschritt durch das Backup ersetzen?')) return;
+                localStorage.setItem(STORAGE_KEY, txt);
+                location.reload();
+            })
+            .catch(() => this.showToast('Backup konnte nicht gelesen werden'));
     },
 
     resetStats() {
-        if (confirm('Lernfortschritt wirklich auf 0 zurücksetzen?')) {
-            this.data.stats = { rounds: 0, pairsFound: 0, totalErrors: 0 };
-            this.data.vocab.forEach(v => { v.errors = 0; v.box = 0; v.lastSeen = 0; v.lastErrorRound = 0; });
-            this.save();
-            this.startNewGame('normal');
-            this.showToast('Fortschritt zurückgesetzt');
-        }
+        if (!confirm('Lernfortschritt wirklich auf 0 zurücksetzen?')) return;
+        this.data.stats = { rounds: 0, completed: 0, pairsFound: 0, totalErrors: 0, gameSeq: 0 };
+        this.data.vocab.forEach(v => { v.errors = 0; v.box = 0; v.lastSeen = 0; v.errorGame = -1; });
+        clearTimeout(this.sessions.weak.nextTimer);
+        this.sessions.weak = newSession('weakBoard');
+        this.renderBoard('weak');
+        this.startNewGame('normal');
+        this.showToast('Fortschritt zurückgesetzt');
     },
 
     hardReset() {
-        if (confirm('Kompletten Speicher löschen und App neu laden?')) {
+        if (!confirm('Kompletten Speicher löschen und App neu laden?')) return;
+        try {
             localStorage.removeItem(STORAGE_KEY);
             OLD_KEYS.forEach(k => localStorage.removeItem(k));
-            location.reload();
-        }
+        } catch (e) {}
+        location.reload();
     }
 };
 
