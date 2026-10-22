@@ -3,27 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Russisch Trainer V13 (Hardened)</title>
+    <title>Russisch Trainer V14 (Smart SRS)</title>
     <style>
         :root {
-            --primary: #007AFF; --bg: #F2F2F7; --card: #FFF; --text: #000; --sub: #8E8E93;
-            --danger: #FF3B30; --success: #34C759; --radius: 16px; --shadow: 0 2px 8px rgba(0,0,0,0.08);
-            --gold: #FFD700;
+            --primary: #007AFF; --bg: #F2F2F7; --card: #FFF; --text: #1C1C1E; --sub: #8E8E93;
+            --danger: #FF3B30; --success: #34C759; --warning: #FF9500; --radius: 16px; 
+            --shadow: 0 2px 10px rgba(0,0,0,0.06); --gold: #FFB300;
         }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg); color: var(--text); margin: 0; padding: 0;
             overscroll-behavior: none; height: 100vh; height: 100dvh; display: flex; flex-direction: column;
         }
         .nav-tabs {
-            background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            height: 50px; display: flex; border-bottom: 1px solid rgba(0,0,0,0.1);
+            background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            height: 54px; display: flex; border-bottom: 1px solid rgba(0,0,0,0.08);
             position: sticky; top: 0; z-index: 100; padding-top: env(safe-area-inset-top);
         }
-        .tab-btn { flex: 1; border: none; background: transparent; font-size: 15px; font-weight: 600; color: var(--sub); cursor: pointer; position: relative; }
+        .tab-btn { 
+            flex: 1; border: none; background: transparent; font-size: 15px; font-weight: 600; 
+            color: var(--sub); cursor: pointer; position: relative; transition: color 0.2s;
+        }
         .tab-btn.active { color: var(--primary); }
-        .badge { position: absolute; top: 8px; right: 8px; background: var(--danger); color: white; border-radius: 10px; padding: 2px 6px; font-size: 10px; font-weight: 700; }
+        .tab-btn.active::after {
+            content: ''; position: absolute; bottom: 0; left: 25%; width: 50%; height: 3px;
+            background: var(--primary); border-radius: 3px 3px 0 0;
+        }
+        .badge { 
+            position: absolute; top: 8px; right: 14%; background: var(--danger); color: white; 
+            border-radius: 10px; padding: 2px 6px; font-size: 11px; font-weight: 700; 
+        }
         .content-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
         .tab-content { display: none; height: 100%; flex-direction: column; padding: 16px; overflow-y: auto; }
         .tab-content.active { display: flex; }
@@ -36,38 +46,51 @@
         .card {
             background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            text-align: center; cursor: pointer; position: relative; border: 2px solid transparent;
-            transition: transform 0.1s; touch-action: manipulation; height: 100%; width: 100%;
+            text-align: center; cursor: pointer; position: relative; border: 2.5px solid transparent;
+            transition: transform 0.12s ease, border-color 0.15s ease, background-color 0.15s ease, opacity 0.25s ease;
+            touch-action: manipulation; height: 100%; width: 100%; padding: 8px;
         }
         .card:active { transform: scale(0.96); }
-        .card.selected { border-color: var(--primary); background-color: #E5F1FF; }
-        .card.matched { background-color: var(--success); border-color: var(--success); opacity: 0.2; pointer-events: none; }
+        .card.selected { border-color: var(--primary); background-color: #EBF4FF; }
+        .card.matched { background-color: #E8F8ED; border-color: var(--success); opacity: 0.25; pointer-events: none; transform: scale(0.95); }
         .card.error { background-color: var(--danger); border-color: var(--danger); animation: shake 0.4s; }
-        .card.error .card-text, .card.error .speaker-icon { color: white; }
-        .card-text { font-size: clamp(14px, 2vh, 18px); font-weight: 600; line-height: 1.3; padding: 0 5px; }
-        .speaker-icon { color: var(--sub); margin-top: 6px; width: 20px; height: 20px; }
-        .card.selected .speaker-icon { color: var(--primary); }
-        .btn { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; }
+        .card.error .card-text, .card.error .speaker-icon, .card.error .card-badge { color: white !important; }
         
-        .vocab-item { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: white; }
-        .vocab-list { background: white; border-radius: var(--radius); overflow: hidden; }
-        .box-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #eee; color: #666; margin-left: 5px; }
+        .card-text { font-size: clamp(15px, 2.1vh, 19px); font-weight: 600; line-height: 1.25; word-break: break-word; }
+        .speaker-icon { color: var(--sub); margin-top: 6px; width: 19px; height: 19px; flex-shrink: 0; }
+        .card.selected .speaker-icon { color: var(--primary); }
+        .card-badge {
+            position: absolute; top: 6px; right: 8px; font-size: 10px; font-weight: 700;
+            color: var(--danger); opacity: 0.85;
+        }
+
+        .btn { 
+            background: var(--primary); color: white; border: none; padding: 9px 18px; 
+            border-radius: 20px; font-weight: 600; font-size: 14px; cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+        .btn:active { transform: scale(0.96); }
+        
+        .vocab-item { padding: 12px 14px; border-bottom: 1px solid #EFEFF4; display: flex; justify-content: space-between; align-items: center; background: white; }
+        .vocab-list { background: white; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+        .box-badge { font-size: 11px; padding: 2px 7px; border-radius: 6px; background: #EFEFF4; color: #666; margin-left: 6px; font-weight: 600; }
         .box-badge.master { background: var(--gold); color: #fff; }
 
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .stat-card { background: white; padding: 20px; border-radius: var(--radius); text-align: center; box-shadow: var(--shadow); }
-        .stat-num { font-size: 28px; font-weight: 700; display: block; }
+        .stat-card { background: white; padding: 18px 14px; border-radius: var(--radius); text-align: center; box-shadow: var(--shadow); }
+        .stat-num { font-size: 28px; font-weight: 700; display: block; margin-bottom: 4px; }
         
-        /* Feedback Toast */
         #toast {
-            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.8); color: white; padding: 8px 16px; border-radius: 20px;
-            font-size: 14px; pointer-events: none; opacity: 0; transition: opacity 0.3s; z-index: 999;
+            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(10px);
+            background: rgba(28,28,30,0.92); color: white; padding: 10px 20px; border-radius: 24px;
+            font-size: 14px; font-weight: 500; pointer-events: none; opacity: 0; 
+            transition: opacity 0.25s, transform 0.25s; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            white-space: nowrap;
         }
-        #toast.show { opacity: 1; }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        @keyframes shake { 0%,100% {transform:translateX(0)} 25% {transform:translateX(-5px)} 75% {transform:translateX(5px)} }
-        @keyframes fadeIn { from {opacity:0;transform:scale(0.9)} to {opacity:1;transform:scale(1)} }
+        @keyframes shake { 0%,100% {transform:translateX(0)} 25% {transform:translateX(-6px)} 75% {transform:translateX(6px)} }
+        @keyframes fadeIn { from {opacity:0;transform:scale(0.94)} to {opacity:1;transform:scale(1)} }
     </style>
 </head>
 <body>
@@ -77,52 +100,70 @@
     <button class="tab-btn" onclick="app.switchTab('manage')">Liste</button>
     <button class="tab-btn" onclick="app.switchTab('stats')">Profil</button>
 </nav>
+
 <div class="content-area">
+    <!-- SPIEL TAB -->
     <div id="tab-game" class="tab-content active">
         <div class="game-header">
-            <div style="color:#8E8E93; font-weight:500" id="gameProgress">0 / 5 Paare</div>
-            <button class="btn" onclick="app.startNewGame('normal')">Weiter Lernen ▶</button>
+            <div>
+                <div style="color:var(--text); font-weight:700; font-size:15px" id="gameProgress">0 / 5 Paare</div>
+                <div style="color:var(--sub); font-size:12px" id="roundSubtext">Smart-Mix aktiv</div>
+            </div>
+            <button class="btn" onclick="app.startNewGame('normal')">Neue Runde ↻</button>
         </div>
         <div id="gameBoard" class="game-grid"></div>
     </div>
 
+    <!-- FEHLER-TRAINING TAB -->
     <div id="tab-weak" class="tab-content">
         <div class="game-header">
-            <div><strong>Fehler üben</strong><br><span style="color:#8E8E93" id="weakCountDisplay">0 Wörter</span></div>
-            <button class="btn" id="btnStartWeak" onclick="app.startNewGame('weak')">Starten ▶</button>
+            <div>
+                <strong>Gezieltes Fehler-Training</strong><br>
+                <span style="color:var(--sub); font-size:13px" id="weakCountDisplay">0 Wörter mit Fehlern</span>
+            </div>
+            <button class="btn" id="btnStartWeak" onclick="app.startNewGame('weak')">Training starten ▶</button>
         </div>
-        <div id="weakBoard" class="game-grid" style="border: 2px dashed #ddd; border-radius: 16px; display:flex; justify-content:center; align-items:center; color:#999; text-align:center; padding:20px">
-            Wörter, die du falsch machst,<br>landen hier zur Wiederholung.
+        <div id="weakBoard" class="game-grid" style="border: 2px dashed #D1D1D6; border-radius: 16px; display:flex; justify-content:center; align-items:center; color:#8E8E93; text-align:center; padding:20px">
+            Wörter, die du verwechselst,<br>landen automatisch hier zum Üben.
         </div>
     </div>
 
+    <!-- VOKABELLISTE TAB -->
     <div id="tab-manage" class="tab-content">
-        <div style="display:flex; gap:10px; margin-bottom:15px">
-             <input type="text" id="searchInput" placeholder="Suchen..." style="flex:1; padding:12px; border:none; background:#e3e3e8; border-radius:10px;" onkeyup="app.renderVocabList()">
-             <div style="padding:12px; background:#fff; border-radius:10px; font-size:12px; display:flex; align-items:center">Box 0-5</div>
+        <div style="display:flex; gap:8px; margin-bottom:12px; flex-shrink:0;">
+            <input type="text" id="searchInput" placeholder="Russisch oder Englisch suchen..." style="flex:1; padding:12px 14px; border:none; background:#E5E5EA; border-radius:12px; font-size:15px;" oninput="app.renderVocabList()">
+            <select id="filterSelect" onchange="app.renderVocabList()" style="padding:0 12px; border:none; background:#fff; border-radius:12px; font-weight:600; font-size:13px; color:var(--text);">
+                <option value="all">Alle</option>
+                <option value="errors">Nur Fehler</option>
+                <option value="unseen">Noch neu (Box 0)</option>
+                <option value="master">Meister (Box 5)</option>
+            </select>
         </div>
-        <div class="vocab-list" id="vocabListContainer"></div>
+        <div class="vocab-list" id="vocabListContainer" style="overflow-y:auto;"></div>
     </div>
 
+    <!-- PROFIL / STATS TAB -->
     <div id="tab-stats" class="tab-content">
         <div class="stats-grid">
-            <div class="stat-card"><span class="stat-num" style="color:var(--primary)" id="statTotalWords">0</span><span style="font-size:13px;color:#8E8E93">GESAMT</span></div>
-            <div class="stat-card"><span class="stat-num" style="color:var(--gold)" id="statMastered">0</span><span style="font-size:13px;color:#8E8E93">MEISTER</span></div>
-            <div class="stat-card"><span class="stat-num" id="statRounds">0</span><span style="font-size:13px;color:#8E8E93">RUNDEN</span></div>
-            <div class="stat-card"><span class="stat-num" style="color:var(--danger)" id="statErrors">0</span><span style="font-size:13px;color:#8E8E93">FEHLER</span></div>
+            <div class="stat-card"><span class="stat-num" style="color:var(--primary)" id="statTotalWords">0</span><span style="font-size:12px;color:var(--sub);font-weight:600">VOKABELN (UNIKATE)</span></div>
+            <div class="stat-card"><span class="stat-num" style="color:var(--gold)" id="statMastered">0</span><span style="font-size:12px;color:var(--sub);font-weight:600">MEISTER (BOX 5)</span></div>
+            <div class="stat-card"><span class="stat-num" style="color:var(--success)" id="statPairsFound">0</span><span style="font-size:12px;color:var(--sub);font-weight:600">PAARE GELÖST</span></div>
+            <div class="stat-card"><span class="stat-num" style="color:var(--danger)" id="statErrors">0</span><span style="font-size:12px;color:var(--sub);font-weight:600">FEHLVERSUCHE</span></div>
+        </div>
+        <div class="stat-card" style="margin-top:12px; display:flex; justify-content:space-around; align-items:center; padding:14px">
+            <div><span style="font-size:12px;color:var(--sub);font-weight:600">GESPIELTE RUNDEN</span><strong style="display:block;font-size:20px;margin-top:2px" id="statRounds">0</strong></div>
+            <div style="height:30px;width:1px;background:#E5E5EA"></div>
+            <div><span style="font-size:12px;color:var(--sub);font-weight:600">OFFENE PROBLEM-WÖRTER</span><strong style="display:block;font-size:20px;margin-top:2px;color:var(--warning)" id="statOpenWeak">0</strong></div>
         </div>
         <div style="margin-top:auto; gap:10px; display:flex; flex-direction:column; padding-top:20px">
-            <button class="btn" style="background:#8E8E93" onclick="app.resetStats()">Lernfortschritt Reset</button>
-            <button class="btn" style="background:var(--danger)" onclick="app.hardReset()">Alles Löschen</button>
+            <button class="btn" style="background:#8E8E93; padding:12px" onclick="app.resetStats()">Lernfortschritt zurücksetzen</button>
+            <button class="btn" style="background:var(--danger); padding:12px" onclick="app.hardReset()">Kompletten Speicher löschen</button>
         </div>
     </div>
 </div>
 <div id="toast"></div>
 
 <script>
-// -------------------------------------------------------
-// VOKABELN HIER EINFÜGEN (BITTE DEINE 620 EINFÜGEN)
-// -------------------------------------------------------
 const RAW_VOCAB = [
 ["и","and"],["в","in, at"],["не","not"],["он","he"],["на","on, at"],["я","I"],["что","what, that"],["тот","that"],["быть","to be"],["с","with, from"],
 ["а","and, but"],["весь","all"],["это","this is"],["как","how"],["она","she"],["по","along, by"],["но","but"],["они","they"],["к","to"],["у","at, by"],
@@ -188,112 +229,231 @@ const RAW_VOCAB = [
 ["жестокий","cruel"],["жадный","greedy"],["щедрый","generous"],["вежливый","polite"],["грубый","rude"],["внимательный","attentive"],["осторожный","careful"],["аккуратный","neat"],["ленивый","lazy"],["трудолюбивый","hardworking"]
 ];
 
+const STORAGE_KEY = 'ru_trainer_v14_smart';
+const LEGACY_KEY = 'ru_trainer_v13_hardened';
+
 const app = {
-    data: { vocab: [], stats: { rounds: 0, pairsFound: 0, totalErrors: 0 } },
-    state: { cards: [], selected: null, locked: false, matches: 0, totalPairs: 0, mode: 'normal' },
+    data: { 
+        vocab: [], 
+        stats: { rounds: 0, pairsFound: 0, totalErrors: 0 } 
+    },
+    state: { 
+        cards: [], 
+        selected: null, 
+        locked: false, 
+        matches: 0, 
+        totalPairs: 0, 
+        mode: 'normal',
+        recentMistakes: [], // Merkt sich Wörter, die kürzlich falsch waren
+        toastTimer: null
+    },
 
     init() {
-        // Neue Storage Key V13 (The Tank)
-        const stored = localStorage.getItem('ru_trainer_v13_hardened');
+        const stored = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_KEY);
         let savedStats = {};
 
-        // Versuch: Alte Stats retten (Falls möglich)
         if (stored) {
             try {
                 const parsed = JSON.parse(stored);
-                this.data.stats = parsed.stats || { rounds: 0, pairsFound: 0, totalErrors: 0 };
-                if(parsed.vocab) {
+                this.data.stats = {
+                    rounds: parsed.stats?.rounds || 0,
+                    pairsFound: parsed.stats?.pairsFound || 0,
+                    totalErrors: parsed.stats?.totalErrors || 0
+                };
+                if (Array.isArray(parsed.vocab)) {
                     parsed.vocab.forEach(v => {
-                        // TRIMMED KEY IS THE SECRET
-                        if(v.russian) savedStats[v.russian.trim()] = { errors: v.errors || 0, box: v.box || 0 };
+                        if (v.russian) {
+                            savedStats[v.russian.trim()] = {
+                                errors: v.errors || 0,
+                                box: v.box || 0,
+                                lastSeen: v.lastSeen || 0,
+                                lastErrorRound: v.lastErrorRound || 0
+                            };
+                        }
                     });
                 }
-            } catch(e) {}
+            } catch (e) {
+                console.warn('Fehler beim Laden alter Daten:', e);
+            }
         }
 
-        // NEUBAU DER LISTE (Mit Trim Protection)
-        this.data.vocab = RAW_VOCAB.map(p => {
-            const ru = String(p[0]).trim(); // KILL WHITESPACE
-            const en = String(p[1]).trim(); // KILL WHITESPACE
-            const stats = savedStats[ru] || { errors: 0, box: 0 }; 
-            return {
-                russian: ru,
-                english: en,
-                errors: stats.errors,
-                box: stats.box
-            };
+        // Deduplizierung + Initialisierung
+        const seen = new Set();
+        this.data.vocab = [];
+
+        RAW_VOCAB.forEach(p => {
+            const ru = String(p[0]).trim();
+            const en = String(p[1]).trim();
+            if (!seen.has(ru)) {
+                seen.add(ru);
+                const st = savedStats[ru] || { errors: 0, box: 0, lastSeen: 0, lastErrorRound: 0 };
+                this.data.vocab.push({
+                    russian: ru,
+                    english: en,
+                    errors: st.errors,
+                    box: st.box,
+                    lastSeen: st.lastSeen,
+                    lastErrorRound: st.lastErrorRound
+                });
+            }
         });
 
         this.save();
-        this.updateUI();
         this.startNewGame('normal');
     },
-    
-    save() { 
-        try { localStorage.setItem('ru_trainer_v13_hardened', JSON.stringify(this.data)); } 
-        catch(e){ console.log('Save failed', e); } 
-        this.updateUI(); 
+
+    save() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+        } catch (e) {
+            console.warn('Speichern fehlgeschlagen:', e);
+        }
+        this.updateUI();
     },
-    
+
     showToast(msg) {
         const t = document.getElementById('toast');
+        if (!t) return;
         t.textContent = msg;
         t.classList.add('show');
-        setTimeout(() => t.classList.remove('show'), 2000);
+        clearTimeout(this.state.toastTimer);
+        this.state.toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
     },
-    
+
+    speak(text) {
+        if (!('speechSynthesis' in window)) return;
+        try {
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = 'ru-RU';
+            u.rate = 0.95;
+            window.speechSynthesis.speak(u);
+        } catch (e) {}
+    },
+
     switchTab(id) {
+        const tabs = ['game', 'weak', 'manage', 'stats'];
         document.querySelectorAll('.tab-btn, .tab-content').forEach(e => e.classList.remove('active'));
-        document.querySelectorAll('.tab-btn')[['game','weak','manage','stats'].indexOf(id)].classList.add('active');
-        document.getElementById('tab-'+id).classList.add('active');
-        this.updateUI(); 
-        if(id === 'manage') this.renderVocabList();
+        const idx = tabs.indexOf(id);
+        if (idx !== -1) document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+        const content = document.getElementById('tab-' + id);
+        if (content) content.classList.add('active');
+        
+        this.updateUI();
+        if (id === 'manage') this.renderVocabList();
+    },
+
+    // Smart-Algorithmus: Mischt fällige Fehler, neue Wörter und Wiederholungen ohne Endlosschleifen
+    pickSmartSelection(count = 5) {
+        const currentRound = this.data.stats.rounds + 1;
+        const all = [...this.data.vocab];
+        const chosen = [];
+        const chosenSet = new Set();
+
+        const addWord = (w) => {
+            if (w && !chosenSet.has(w.russian) && chosen.length < count) {
+                chosen.push(w);
+                chosenSet.add(w.russian);
+            }
+        };
+
+        // 1. Bis zu 2 Problemwörter holen (bevorzugt solche, die mindestens 1 Runde Pause hatten)
+        const errorPool = all.filter(v => v.errors > 0).sort((a, b) => {
+            const cooldownA = (currentRound - (a.lastSeen || 0)) >= 2 ? 1 : 0;
+            const cooldownB = (currentRound - (b.lastSeen || 0)) >= 2 ? 1 : 0;
+            if (cooldownB !== cooldownA) return cooldownB - cooldownA;
+            return b.errors - a.errors;
+        });
+        errorPool.slice(0, 2).forEach(addWord);
+
+        // 2. Restliche Plätze mit gewichteter Spaced-Repetition-Formel füllen
+        const remaining = all.filter(v => !chosenSet.has(v.russian));
+        remaining.forEach(v => {
+            const roundsSinceSeen = currentRound - (v.lastSeen || 0);
+            // Cooldown-Malus: Wenn das Wort gerade erst in der letzten Runde dran war, stark abwerten
+            const recencyPenalty = (v.lastSeen > 0 && roundsSinceSeen <= 2) ? -500 : Math.min(roundsSinceSeen * 12, 180);
+            // Box-Gewichtung: Box 1-2 (in Arbeit) leicht vor Box 0 (ganz neu), Box 5 (Meister) selten
+            const boxWeight = v.box === 0 ? 140 : (6 - v.box) * 45;
+            const errorBonus = v.errors * 90;
+            v._score = boxWeight + errorBonus + recencyPenalty + (Math.random() * 65);
+        });
+
+        remaining.sort((a, b) => b._score - a._score);
+        for (const w of remaining) {
+            if (chosen.length >= count) break;
+            addWord(w);
+        }
+
+        return chosen;
     },
 
     startNewGame(mode) {
-        this.state.mode = mode; 
-        this.state.matches = 0; 
-        this.state.selected = null; 
+        this.state.mode = mode;
+        this.state.matches = 0;
+        this.state.selected = null;
         this.state.locked = false;
-        
-        let pool = [];
-        
+
+        const currentRound = this.data.stats.rounds + 1;
+        let selection = [];
+
         if (mode === 'weak') {
-            // EXPLICIT FILTER CHECK
-            pool = this.data.vocab.filter(v => v.errors > 0);
-            if (pool.length === 0) return alert("Keine Fehler gespeichert! (Liste ist leer)");
-        } else {
-            let all = [...this.data.vocab];
-            all.sort((a, b) => {
-                let scoreA = (a.errors * 1000) + ((5 - (a.box||0)) * 50) + Math.random() * 100;
-                let scoreB = (b.errors * 1000) + ((5 - (b.box||0)) * 50) + Math.random() * 100;
-                return scoreB - scoreA;
+            let pool = this.data.vocab.filter(v => v.errors > 0);
+            if (pool.length === 0) {
+                this.showToast("Super! Aktuell keine offenen Fehler.");
+                const weakBoard = document.getElementById('weakBoard');
+                weakBoard.style.display = 'flex';
+                weakBoard.innerHTML = '🎉 Keine Fehler vorhanden!<br>Spiele im normalen Modus weiter.';
+                return;
+            }
+            // Auch im Fehlermodus: Wörter rotieren lassen statt immer nur dieselben 5
+            pool.sort((a, b) => {
+                const ageA = currentRound - (a.lastSeen || 0);
+                const ageB = currentRound - (b.lastSeen || 0);
+                return (b.errors * 30 + ageB * 25 + Math.random() * 20) - (a.errors * 30 + ageA * 25 + Math.random() * 20);
             });
-            pool = all.slice(0, 5);
+            selection = pool.slice(0, Math.min(5, pool.length));
+        } else {
+            selection = this.pickSmartSelection(5);
+            this.data.stats.rounds++;
         }
 
-        const count = Math.min(5, pool.length);
-        const selection = pool.slice(0, count);
         this.state.totalPairs = selection.length;
 
-        // PairID ist immer das getrimmte russische Wort
-        let ru = selection.map(w => ({ text: w.russian, type: 'ru', pairId: w.russian })); 
-        let en = selection.map(w => ({ text: w.english, type: 'en', pairId: w.russian })); 
-        
-        ru.sort(() => Math.random() - 0.5);
-        en.sort(() => Math.random() - 0.5);
-        
+        // Markiere ausgewählte Wörter als in dieser Runde gesehen
+        selection.forEach(w => { w.lastSeen = this.data.stats.rounds; });
+
+        const ru = selection.map(w => ({ text: w.russian, type: 'ru', pairId: w.russian, errors: w.errors }));
+        const en = selection.map(w => ({ text: w.english, type: 'en', pairId: w.russian, errors: w.errors }));
+
+        // Echter Fisher-Yates Shuffle
+        const shuffle = (arr) => {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+        };
+        shuffle(ru);
+        shuffle(en);
+
         this.state.cards = [];
-        for(let i=0; i < this.state.totalPairs; i++) { 
-            this.state.cards.push(ru[i]); 
-            this.state.cards.push(en[i]); 
+        for (let i = 0; i < this.state.totalPairs; i++) {
+            this.state.cards.push(ru[i]);
+            this.state.cards.push(en[i]);
         }
-        
+
         const board = document.getElementById(mode === 'weak' ? 'weakBoard' : 'gameBoard');
-        if(mode === 'weak') board.style.display = 'grid';
+        if (mode === 'weak') board.style.display = 'grid';
         this.renderBoard(board);
+
+        const errInRound = selection.filter(w => w.errors > 0).length;
         document.getElementById('gameProgress').textContent = `0 / ${this.state.totalPairs} Paare`;
-        if(mode === 'normal') this.data.stats.rounds++;
+        const sub = document.getElementById('roundSubtext');
+        if (sub) {
+            sub.textContent = errInRound > 0 
+                ? `Inkl. ${errInRound} Wiederholungs-${errInRound === 1 ? 'Wort' : 'Wörtern'}`
+                : `Runde ${this.data.stats.rounds} • Neue & fällige Wörter`;
+        }
+
         this.save();
     },
 
@@ -302,19 +462,45 @@ const app = {
         this.state.cards.forEach((c, i) => {
             const el = document.createElement('div');
             el.className = 'card';
-            el.style.animation = `fadeIn 0.3s ease backwards ${i * 0.05}s`;
-            el.innerHTML = `<div class="card-text">${c.text}</div>` + 
+            el.style.animation = `fadeIn 0.25s ease backwards ${i * 0.03}s`;
+            
+            const errorDot = (c.errors > 0 && c.type === 'ru') 
+                ? `<span class="card-badge">★ ${c.errors}</span>` 
+                : '';
+
+            el.innerHTML = errorDot + `<div class="card-text">${c.text}</div>` +
                 (c.type === 'ru' ? `<svg class="speaker-icon" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>` : '');
-            el.onclick = () => {
-                if(c.type === 'ru') { window.speechSynthesis.cancel(); let u = new SpeechSynthesisUtterance(c.text); u.lang='ru-RU'; window.speechSynthesis.speak(u); }
-                if(!this.state.locked && !el.classList.contains('matched') && this.state.selected?.el !== el) {
-                    el.classList.add('selected');
-                    if(!this.state.selected) this.state.selected = { el, data: c };
-                    else this.checkMatch(this.state.selected, { el, data: c });
-                }
-            };
+            
+            el.onclick = () => this.handleCardClick(el, c);
             container.appendChild(el);
         });
+    },
+
+    handleCardClick(el, c) {
+        if (c.type === 'ru') this.speak(c.text);
+        if (this.state.locked || el.classList.contains('matched')) return;
+
+        // Klick auf dieselbe Karte hebt Auswahl wieder auf
+        if (this.state.selected?.el === el) {
+            el.classList.remove('selected');
+            this.state.selected = null;
+            return;
+        }
+
+        // Klick auf eine Karte derselben Spalte/Sprache wechselt einfach die Auswahl (kein Fehler!)
+        if (this.state.selected && this.state.selected.data.type === c.type) {
+            this.state.selected.el.classList.remove('selected');
+            el.classList.add('selected');
+            this.state.selected = { el, data: c };
+            return;
+        }
+
+        el.classList.add('selected');
+        if (!this.state.selected) {
+            this.state.selected = { el, data: c };
+        } else {
+            this.checkMatch(this.state.selected, { el, data: c });
+        }
     },
 
     checkMatch(c1, c2) {
@@ -323,99 +509,140 @@ const app = {
 
         if (isMatch) {
             setTimeout(() => {
-                if(c1.el) c1.el.classList.replace('selected','matched'); 
-                if(c2.el) c2.el.classList.replace('selected','matched');
-                
+                c1.el?.classList.replace('selected', 'matched');
+                c2.el?.classList.replace('selected', 'matched');
+
                 this.state.matches++;
-                this.state.selected = null; 
+                this.state.selected = null;
                 this.state.locked = false;
+                this.data.stats.pairsFound++;
+
                 document.getElementById('gameProgress').textContent = `${this.state.matches} / ${this.state.totalPairs} Paare`;
 
-                // POSITIVE UPDATE
                 const w = this.data.vocab.find(v => v.russian === c1.data.pairId);
-                if(w) {
-                    if(!w.box) w.box = 0;
-                    if(w.box < 5) w.box++;
-                    if(w.errors > 0) w.errors--;
-                    this.save();
+                if (w) {
+                    // War das Wort nicht gerade in derselben Runde falsch? Dann Box hoch & Fehler abbauen
+                    if (w.lastErrorRound !== this.data.stats.rounds) {
+                        w.box = Math.min(5, (w.box || 0) + 1);
+                        if (w.errors > 0) w.errors--;
+                    }
                 }
+                this.save();
 
-                if(this.state.matches === this.state.totalPairs) setTimeout(() => {
-                    if(confirm("Runde fertig! Weiter?")) this.startNewGame(this.state.mode);
-                }, 300);
-            }, 300);
+                if (this.state.matches === this.state.totalPairs) {
+                    this.showToast("Runde geschafft! Nächste Runde lädt...");
+                    setTimeout(() => this.startNewGame(this.state.mode), 1100);
+                }
+            }, 220);
         } else {
-            // ERROR LOGIC - THE TANK METHOD
-            c1.el.classList.add('error'); c2.el.classList.add('error');
-            this.showToast("Fehler gespeichert!"); // VISUAL CONFIRMATION
+            c1.el.classList.add('error');
+            c2.el.classList.add('error');
+            this.showToast("Verwechselt – für Wiederholung gemerkt!");
 
-            setTimeout(() => {
-                if(c1.el) c1.el.classList.remove('selected','error');
-                if(c2.el) c2.el.classList.remove('selected','error');
-                this.state.selected = null; 
-                this.state.locked = false;
-            }, 800);
+            const w1 = this.data.vocab.find(v => v.russian === c1.data.pairId);
+            const w2 = this.data.vocab.find(v => v.russian === c2.data.pairId);
 
-            // 1. Update für Karte 1
-            let w1 = this.data.vocab.find(v => v.russian === c1.data.pairId);
-            if(w1) { 
-                w1.errors = (w1.errors || 0) + 1; 
-                w1.box = 1; 
-            } else { console.error("Word 1 not found:", c1.data.pairId); }
-
-            // 2. Update für Karte 2 (falls unterschiedlich)
-            if(c1.data.pairId !== c2.data.pairId) {
-                let w2 = this.data.vocab.find(v => v.russian === c2.data.pairId);
-                if(w2) { 
-                    w2.errors = (w2.errors || 0) + 1; 
-                    w2.box = 1; 
-                } else { console.error("Word 2 not found:", c2.data.pairId); }
-            }
+            [w1, w2].forEach(w => {
+                if (w) {
+                    w.errors = (w.errors || 0) + 1;
+                    w.box = 1;
+                    w.lastErrorRound = this.data.stats.rounds;
+                }
+            });
 
             this.data.stats.totalErrors++;
-            this.save(); // SAVE IMMEDIATELY
+            this.save();
+
+            setTimeout(() => {
+                c1.el?.classList.remove('selected', 'error');
+                c2.el?.classList.remove('selected', 'error');
+                this.state.selected = null;
+                this.state.locked = false;
+            }, 700);
         }
     },
 
     updateUI() {
         const total = this.data.vocab.length;
         const errorWords = this.data.vocab.filter(v => v.errors > 0).length;
-        
-        document.getElementById('statTotalWords').textContent = total;
-        document.getElementById('statRounds').textContent = this.data.stats.rounds;
-        document.getElementById('statPairsFound').textContent = this.data.stats.pairsFound;
-        document.getElementById('statErrors').textContent = this.data.stats.totalErrors;
-        document.getElementById('statMastered').textContent = this.data.vocab.filter(v => v.box === 5).length;
-        
-        document.getElementById('weakCountDisplay').textContent = `${errorWords} Wörter`;
-        document.getElementById('btnStartWeak').style.opacity = errorWords > 0 ? 1 : 0.5;
-        
+        const mastered = this.data.vocab.filter(v => v.box === 5).length;
+
+        const setTxt = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = val;
+        };
+
+        setTxt('statTotalWords', total);
+        setTxt('statRounds', this.data.stats.rounds);
+        setTxt('statPairsFound', this.data.stats.pairsFound);
+        setTxt('statErrors', this.data.stats.totalErrors);
+        setTxt('statMastered', mastered);
+        setTxt('statOpenWeak', errorWords);
+        setTxt('weakCountDisplay', `${errorWords} ${errorWords === 1 ? 'Wort' : 'Wörter'} zum Wiederholen`);
+
+        const btnWeak = document.getElementById('btnStartWeak');
+        if (btnWeak) btnWeak.style.opacity = errorWords > 0 ? '1' : '0.4';
+
         const badge = document.getElementById('weakBadge');
-        if(errorWords > 0) {
-            badge.textContent = errorWords;
-            badge.style.display = 'block';
-        } else {
-            badge.style.display = 'none';
+        if (badge) {
+            if (errorWords > 0) {
+                badge.textContent = errorWords;
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
         }
     },
 
     renderVocabList() {
-        const q = document.getElementById('searchInput').value.toLowerCase();
-        const list = document.getElementById('vocabListContainer'); list.innerHTML = '';
-        this.data.vocab.filter(v => v.russian.toLowerCase().includes(q) || v.english.toLowerCase().includes(q))
-            .slice(0, 50).forEach(v => {
-                const d = document.createElement('div'); d.className = 'vocab-item';
-                const boxClass = v.box === 5 ? 'master' : '';
-                d.innerHTML = `
-                    <div><strong>${v.russian}</strong> <span class="box-badge ${boxClass}">Box ${v.box||0}</span><br><small>${v.english}</small></div>
-                    ${v.errors ? `<div style="background:var(--danger);color:#fff;padding:2px 8px;border-radius:8px;font-size:12px">${v.errors} Fehler</div>` : ''}
-                `;
-                list.appendChild(d);
-            });
+        const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
+        const filter = document.getElementById('filterSelect')?.value || 'all';
+        const list = document.getElementById('vocabListContainer');
+        if (!list) return;
+        list.innerHTML = '';
+
+        let filtered = this.data.vocab.filter(v => 
+            v.russian.toLowerCase().includes(q) || v.english.toLowerCase().includes(q)
+        );
+
+        if (filter === 'errors') filtered = filtered.filter(v => v.errors > 0).sort((a,b) => b.errors - a.errors);
+        else if (filter === 'unseen') filtered = filtered.filter(v => !v.box || v.box === 0);
+        else if (filter === 'master') filtered = filtered.filter(v => v.box === 5);
+
+        filtered.slice(0, 80).forEach(v => {
+            const d = document.createElement('div');
+            d.className = 'vocab-item';
+            const boxClass = v.box === 5 ? 'master' : '';
+            d.innerHTML = `
+                <div onclick="app.speak('${v.russian.replace(/'/g, "\\'")}')" style="cursor:pointer; flex:1">
+                    <strong>${v.russian}</strong> 🔊 <span class="box-badge ${boxClass}">Box ${v.box || 0}</span><br>
+                    <small style="color:var(--sub)">${v.english}</small>
+                </div>
+                ${v.errors ? `<div style="background:var(--danger);color:#fff;padding:3px 9px;border-radius:10px;font-size:12px;font-weight:600">${v.errors}× falsch</div>` : ''}
+            `;
+            list.appendChild(d);
+        });
     },
-    resetStats() { if(confirm('Lernfortschritt zurücksetzen?')) { this.data.stats={rounds:0,pairsFound:0,totalErrors:0}; this.data.vocab.forEach(v=>{v.errors=0; v.box=0;}); this.save(); } },
-    hardReset() { if(confirm('Alles Löschen?')) { localStorage.removeItem('ru_trainer_v13_hardened'); location.reload(); } }
+
+    resetStats() {
+        if (confirm('Lernfortschritt wirklich auf 0 zurücksetzen?')) {
+            this.data.stats = { rounds: 0, pairsFound: 0, totalErrors: 0 };
+            this.data.vocab.forEach(v => { v.errors = 0; v.box = 0; v.lastSeen = 0; v.lastErrorRound = 0; });
+            this.save();
+            this.startNewGame('normal');
+            this.showToast('Fortschritt zurückgesetzt');
+        }
+    },
+
+    hardReset() {
+        if (confirm('Alle gespeicherten Daten unwiderruflich löschen?')) {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(LEGACY_KEY);
+            location.reload();
+        }
+    }
 };
+
 document.addEventListener('DOMContentLoaded', () => app.init());
 </script>
 </body>
